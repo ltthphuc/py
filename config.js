@@ -8,14 +8,14 @@
                         (xem HUONG_DAN_TRIEN_KHAI.md - mục "Tạo Firebase").
    ========================================================================== */
 window.PYLAB_CONFIG = {
-  backend: 'local',
+  backend: 'firebase',
 
   firebase: {
-    apiKey: '',
-    authDomain: '',
-    databaseURL: '',
-    projectId: '',
-    appId: ''
+    apiKey: 'AIzaSyBlDFlafEwAeSuOiNElkPGX44ne07j8bPo',
+    authDomain: 'pythonlabltt.firebaseapp.com',
+    databaseURL: 'https://pythonlabltt-default-rtdb.asia-southeast1.firebasedatabase.app',
+    projectId: 'pythonlabltt',
+    appId: '1:102251803685:web:d2d6ffa09242810a607bcc'
   },
 
   maxFileKB: 700   // dung lượng tối đa mỗi file giáo viên chia sẻ cho học sinh
