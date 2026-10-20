@@ -1,4 +1,4 @@
-# Python Lab Online
+﻿# Python Lab Online
 
 Phòng thực hành Python **chạy trên web**: học sinh viết và chạy Python ngay trên trình duyệt (máy tính hoặc điện thoại), ở lớp hay ở nhà; giáo viên xem **trực tiếp** bài làm của cả lớp, sửa hộ, chạy hộ, nhắn tin, thu bài và chia sẻ bài tập.
 
@@ -8,6 +8,8 @@ Phòng thực hành Python **chạy trên web**: học sinh viết và chạy Py
 - **Điện thoại**: giao diện tự co giãn, có thanh phím ký tự nhanh.
 - **Giáo viên**: thẻ giám sát từng học sinh theo thời gian thực, khóa và sửa code học sinh, bấm Chạy/Dừng hộ, gõ `input()` hộ, nhắn riêng hoặc thông báo cả lớp, tải bài nộp (từng bài hoặc `.zip`), chia sẻ file bài tập, mã QR vào lớp.
 - **Miễn phí**: GitHub Pages (phát web) + Firebase gói Spark (đồng bộ thời gian thực).
+
+**Trang chạy thử (chế độ thử, chưa nối Firebase): <https://ltthphuc.github.io/python-lab-online/>**
 
 ## Dùng thử trong 1 phút
 
