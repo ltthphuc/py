@@ -21,6 +21,13 @@
       return new G.LocalDB();
     },
     isDemo() { return Hub.config().backend !== 'firebase'; },
+    /* Danh sách lớp do giáo viên tạo (thư mục chung classes/<mã lớp>) để học sinh CHỌN thay vì tự gõ mã */
+    async listClasses(db) {
+      const v = (await db.get('classes')) || {};
+      return Object.keys(v).map((k) => ({ room: k, title: (v[k] && v[k].title) || k, ts: (v[k] && v[k].ts) || 0 }))
+        .sort((a, b) => a.title.localeCompare(b.title, 'vi'));
+    },
+    async deleteClass(db, room) { await db.remove('rooms/' + room); await db.remove('classes/' + room); },
   };
 
   /* ===================================================================== HỌC SINH */
@@ -89,6 +96,8 @@
         await db.set(this.b + '/meta', m);
       }
       this.meta = m;
+      /* đăng ký lớp vào danh sách chung để học sinh chọn (cả lớp tạo từ trước) */
+      try { if (!(await db.get('classes/' + this.room))) await db.set('classes/' + this.room, { title: m.title || this.room, ts: db.serverTime() }); } catch (e) { /* bỏ qua */ }
       return m;
     }
 
@@ -146,6 +155,33 @@
     close() { this.offs.forEach((f) => { try { f(); } catch (e) { /* bỏ qua */ } }); this.offs = []; }
   }
 
+  /* ===================================================================== QUẢN TRỊ (tạo tài khoản giáo viên) */
+  class AdminConn {
+    constructor(db) { this.db = db; this.offs = []; }
+    async isAdmin() {
+      const uid = this.db.currentUid(); if (!uid) return false;
+      try { return (await this.db.get('admins/' + uid)) === true; } catch (e) { return false; }
+    }
+    onTeachers(fn) {
+      this.offs.push(this.db.on('teacherInfo', 'value', (v) => {
+        fn(Object.keys(v || {}).map((uid) => Object.assign({ uid }, v[uid])).sort((a, b) => (a.created || 0) - (b.created || 0)));
+      }));
+    }
+    async addTeacher(o) {
+      const email = String(o.email || '').trim().toLowerCase(), name = String(o.name || '').trim(), pw = String(o.password || '');
+      if (!/^\S+@\S+\.\S+$/.test(email)) throw new Error('Email chưa đúng dạng (ví dụ ten@truong.edu.vn).');
+      if (pw.length < 6) throw new Error('Mật khẩu cần ít nhất 6 ký tự.');
+      const uid = await this.db.createAccount(email, pw);
+      await this.db.set('teachers/' + uid, true);
+      await this.db.set('teacherInfo/' + uid, { email, name: name || email, created: this.db.serverTime(), by: this.db.currentUid() });
+      return uid;
+    }
+    async revoke(uid) { await this.db.remove('teachers/' + uid); await this.db.remove('teacherInfo/' + uid); }
+    resetPassword(email) { return this.db.resetPassword(email); }
+    close() { this.offs.forEach((f) => { try { f(); } catch (e) { /* bỏ qua */ } }); this.offs = []; }
+  }
+
+  Hub.AdminConn = AdminConn;
   Hub.StudentConn = StudentConn;
   Hub.TeacherConn = TeacherConn;
   G.Hub = Hub;

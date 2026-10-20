@@ -45,6 +45,20 @@
     }
     async signOut() { await this.auth.signOut(); }
     async resetPassword(email) { await this.auth.sendPasswordResetEmail(email); }
+    currentEmail() { return this.auth.currentUser && this.auth.currentUser.email ? this.auth.currentUser.email : ''; }
+    /* Quản trị: tạo tài khoản email/mật khẩu cho giáo viên khác bằng một "ứng dụng phụ" để KHÔNG làm quản trị viên bị đăng xuất.
+       Nếu email đã có tài khoản (tạo từ trước), đăng nhập bằng mật khẩu được nhập để lấy UID. */
+    async createAccount(email, password) {
+      let app; try { app = firebase.app('pl-admin'); } catch (e) { app = firebase.initializeApp(firebase.app().options, 'pl-admin'); }
+      const a = app.auth();
+      try {
+        try { const c = await a.createUserWithEmailAndPassword(email, password); return c.user.uid; }
+        catch (e) {
+          if (e && e.code === 'auth/email-already-in-use') { const c = await a.signInWithEmailAndPassword(email, password); return c.user.uid; }
+          throw e;
+        }
+      } finally { try { await a.signOut(); } catch (x) { /* bỏ qua */ } }
+    }
     currentUid() { return this.auth.currentUser ? this.auth.currentUser.uid : null; }
 
     onConnection(cb) {

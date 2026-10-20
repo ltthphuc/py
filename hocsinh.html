@@ -95,8 +95,11 @@
 <!-- Hộp thoại vào lớp -->
 <div id="joinDlg" class="dlgwrap" hidden>
   <form class="joincard" id="joinForm" autocomplete="off">
-    <div class="jt"><div class="logo big"><svg class="i" viewBox="0 0 24 24"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5M14 4l-4 16"/></svg></div><div><h2>Vào lớp học</h2><p>Nhập mã lớp thầy/cô cho để thầy/cô xem bài và nhận bài nộp của em.</p></div></div>
-    <label class="field"><span>Mã lớp</span><input id="jRoom" class="inp big" maxlength="32" placeholder="ví dụ: 9a1-tin" autocapitalize="off" autocorrect="off" spellcheck="false"></label>
+    <div class="jt"><div class="logo big"><svg class="i" viewBox="0 0 24 24"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5M14 4l-4 16"/></svg></div><div><h2>Vào lớp học</h2><p>Chọn lớp của em trong danh sách để thầy/cô xem bài và nhận bài nộp của em.</p></div></div>
+    <label class="field"><span>Chọn lớp của em</span>
+      <select id="jClass" class="inp big" disabled><option value="">Đang tải danh sách lớp…</option></select></label>
+    <div class="joinalt"><button type="button" id="jManual" class="linkbtn">Không thấy lớp của em? Nhập mã lớp</button>
+      <input id="jRoom" class="inp" maxlength="32" placeholder="mã lớp thầy/cô cho" autocapitalize="off" autocorrect="off" spellcheck="false" hidden></div>
     <div class="row2">
       <label class="field"><span>Họ và tên</span><input id="jName" class="inp" maxlength="40" placeholder="Nguyễn Văn A"></label>
       <label class="field sm"><span>STT</span><input id="jMay" class="inp" maxlength="6" inputmode="numeric" placeholder="05"></label>

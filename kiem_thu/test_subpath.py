@@ -13,7 +13,7 @@ URL = LIVE or f"http://127.0.0.1:{HP}/{ROOT.name}/hocsinh.html"
 
 
 async def main():
-    srv = None if LIVE else subprocess.Popen([sys.executable, "-m", "http.server", str(HP), "--bind", "127.0.0.1"], cwd=str(ROOT.parent), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    srv = None if LIVE else subprocess.Popen([sys.executable, str(ROOT / "kiem_thu" / "serve_test.py"), str(HP), str(ROOT.parent)], cwd=str(ROOT.parent), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     ch = subprocess.Popen([CHROME, "--headless=new", f"--remote-debugging-port={CP}", f"--user-data-dir={tempfile.mkdtemp(prefix='pl_sub_')}", "--no-first-run", "--disable-gpu", "about:blank"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     ok = True
     try:

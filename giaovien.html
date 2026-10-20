@@ -25,6 +25,7 @@
     </div>
     <div class="top-right">
       <span id="conn" class="pill"><span class="dot"></span><span id="connTxt">Chưa đăng nhập</span></span>
+      <button id="btnAdmin" class="btn light" hidden title="Quản trị: tạo tài khoản giáo viên"><svg class="i" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10zM9 12l2 2 4-4"/></svg><span class="lbl">Quản trị</span></button>
       <button id="btnRoom" class="btn light" hidden title="Đổi lớp"><svg class="i" viewBox="0 0 24 24"><path d="M17 1l4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 23l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3"/></svg><span class="lbl">Đổi lớp</span></button>
       <button id="btnOut" class="btn light" hidden title="Đăng xuất"><svg class="i" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg><span class="lbl">Đăng xuất</span></button>
     </div>
@@ -51,8 +52,29 @@
       <label class="field"><span>Tên hiển thị (khi tạo lớp mới)</span><input id="rTitle" class="inp" maxlength="60" placeholder="ví dụ: Lớp 9A1 – Tin học"></label>
       <div id="roomErr" class="joinerr" hidden></div>
       <div class="jactions"><button id="rOpen" type="submit" class="btn primary big">Mở lớp</button><button id="rNew" type="button" class="btn big">Tạo lớp mới</button></div>
-      <div id="recent" class="recent" hidden><span>Lớp đã dùng:</span><div id="recentList"></div></div>
+      <div id="recent" class="recent" hidden><span>Lớp hiện có (bấm để chọn):</span><div id="recentList"></div></div>
     </form>
+  </section>
+
+  <!-- ============ Quản trị giáo viên ============ -->
+  <section id="adminView" class="adminwrap" hidden>
+    <div class="adminin">
+      <div class="panel-head"><div><h2>Quản trị giáo viên</h2><div class="sub">Tạo tài khoản (email + mật khẩu) cho giáo viên khác, gửi email đặt lại mật khẩu, thu hồi quyền.</div></div>
+        <button id="adBack" class="btn" type="button">← Quay lại</button></div>
+      <form id="adForm" class="box adbox" autocomplete="off">
+        <h3>Thêm giáo viên mới</h3>
+        <div class="adrow">
+          <label class="field"><span>Họ và tên</span><input id="adName" class="inp" maxlength="60" placeholder="Nguyễn Văn B"></label>
+          <label class="field"><span>Email</span><input id="adEmail" class="inp" type="email" required placeholder="ten@truong.edu.vn"></label>
+          <label class="field"><span>Mật khẩu (từ 6 ký tự)</span><div class="pwrow"><input id="adPass" class="inp mono" type="text" required minlength="6" maxlength="40" autocomplete="new-password"><button id="adGen" class="btn" type="button">Tạo ngẫu nhiên</button></div></label>
+        </div>
+        <div id="adMsg" hidden></div>
+        <div class="adact"><button id="adGo" class="btn primary" type="submit">Tạo tài khoản giáo viên</button></div>
+      </form>
+      <div class="table-wrap"><table class="tbl"><thead><tr><th>Họ tên</th><th>Email</th><th style="width:130px">Thêm lúc</th><th style="width:300px"></th></tr></thead><tbody id="adBody"></tbody></table>
+        <div id="adEmpty" class="empty-big small" hidden><p>Chưa có giáo viên nào được thêm ở đây.</p></div></div>
+      <p class="adnote">Bạn (quản trị viên) được cấp quyền từ Firebase nên không nằm trong bảng này. Muốn xóa hẳn một tài khoản: Firebase → Authentication → Users. Muốn thêm một quản trị viên khác: thêm <code>admins/&lt;UID&gt;</code> = <code>true</code> trong Realtime Database.</p>
+    </div>
   </section>
 
   <!-- ============ Bảng điều khiển ============ -->
@@ -79,6 +101,7 @@
         </select>
         <button id="btnNotify" class="btn"><svg class="i" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/></svg><span class="lbl">Thông báo cả lớp</span></button>
         <button id="btnSaveAll" class="btn primary"><svg class="i" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg><span class="lbl">Tải code cả lớp (.zip)</span></button>
+        <button id="btnDelClass" class="btn ghost danger" title="Xóa lớp này cùng học sinh và bài nộp"><svg class="i" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v6M14 11v6"/></svg><span class="lbl">Xóa lớp</span></button>
         <button id="btnClearOff" class="btn ghost" title="Xóa các học sinh đã mất kết nối khỏi danh sách"><svg class="i" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg><span class="lbl">Dọn học sinh offline</span></button>
       </div>
     </div>

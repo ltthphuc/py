@@ -3,18 +3,19 @@
 (function (G) {
   'use strict';
 
-  const STORE_KEY = 'pylab_demo_db';
+  const DEFAULT_KEY = 'pylab_demo_db';
   const clone = (v) => (v === undefined ? null : JSON.parse(JSON.stringify(v)));
   const parts = (p) => String(p).split('/').filter(Boolean);
 
   class LocalDB {
-    constructor() {
+    constructor(opts) {
+      opts = opts || {}; this.storeKey = opts.key || DEFAULT_KEY;
       this.kind = 'local';
       this.listeners = [];
       this.disc = [];
       this.timer = null;
-      try { this.store = JSON.parse(localStorage.getItem(STORE_KEY) || '{}'); } catch (e) { this.store = {}; }
-      this.bc = new BroadcastChannel('pylab-demo-db');
+      try { this.store = JSON.parse(localStorage.getItem(this.storeKey) || '{}'); } catch (e) { this.store = {}; }
+      this.bc = new BroadcastChannel(opts.channel || 'pylab-demo-db');
       this.bc.onmessage = (e) => { const m = e.data; if (m && m.op === 'set') { this._set(m.path, m.value); this._notify(); } };
       window.addEventListener('pagehide', () => this._runDisc());
       this.uid = null;
@@ -39,7 +40,7 @@
       if (value == null) delete cur[last]; else cur[last] = clone(value);
       for (let i = chain.length - 1; i >= 0; i--) { const [o, k] = chain[i]; if (o[k] && typeof o[k] === 'object' && !Object.keys(o[k]).length) delete o[k]; else break; }
     }
-    _save() { clearTimeout(this.timer); this.timer = setTimeout(() => { try { localStorage.setItem(STORE_KEY, JSON.stringify(this.store)); } catch (e) { /* đầy bộ nhớ */ } }, 150); }
+    _save() { try { localStorage.setItem(this.storeKey, JSON.stringify(this.store)); } catch (e) { /* đầy bộ nhớ */ } }   // ghi ngay: tab khác mở sau đó phải thấy dữ liệu mới
     _write(path, value) {
       this._set(path, value);
       this.bc.postMessage({ op: 'set', path, value: clone(value) });
@@ -113,6 +114,7 @@
     async signOut() { this.uid = null; try { sessionStorage.removeItem('pylab_demo_teacher'); } catch (e) { /* bỏ qua */ } }
     async resetPassword() { throw this._err('demo', 'Chế độ thử không gửi được email. Muốn đặt lại, hãy tạo tài khoản với email khác.'); }
     currentUid() { return this.uid; }
+    currentEmail() { try { const d = JSON.parse(sessionStorage.getItem('pylab_demo_teacher') || 'null'); return d ? d.email : ''; } catch (e) { return ''; } }
     onConnection(cb) { cb(true); return () => {}; }
     onDisconnectSet(path, value) { this.disc = this.disc.filter((d) => d.path !== path); this.disc.push({ path, value }); }
     _runDisc() { for (const d of this.disc) this._write(d.path, d.value); this.disc = []; this._notify(); }

@@ -9,7 +9,7 @@
 <script>
   /* ----- SDK Firebase giả lập ----- */
   (function () {
-    const L = new LocalDB();
+    localStorage.removeItem('pylab_mock_db'); const L = new LocalDB({ key: 'pylab_mock_db', channel: 'pylab-mock-db' });
     const snap = (v, k) => ({ val: () => (v === undefined ? null : v), key: k });
     function ref(path) {
       const key = path.split('/').pop();
@@ -37,8 +37,15 @@
       signOut: async () => { user = null; },
       get currentUser() { return user; },
     }; };
+    const accounts = { 'cu@truong.vn': { pw: 'matcu1', uid: 'OLDUID' } };
+    const secAuth = { _u: null,
+      async createUserWithEmailAndPassword(e, p) { if (accounts[e]) { const x = new Error('exists'); x.code = 'auth/email-already-in-use'; throw x; } accounts[e] = { pw: p, uid: 'NEW' + Object.keys(accounts).length }; this._u = { uid: accounts[e].uid }; return { user: this._u }; },
+      async signInWithEmailAndPassword(e, p) { if (!accounts[e] || accounts[e].pw !== p) { const x = new Error('wrong'); x.code = 'auth/wrong-password'; throw x; } this._u = { uid: accounts[e].uid }; return { user: this._u }; },
+      async signOut() { this._u = null; window.__secSignOut = (window.__secSignOut || 0) + 1; } };
     window.firebase = {
-      apps: [], initializeApp(c) { this.apps.push(c); },
+      apps: [], __named: {},
+      initializeApp(c, name) { this.apps.push(c); if (name) { this.__named[name] = { options: c, auth: () => secAuth }; return this.__named[name]; } },
+      app(name) { if (!name) return { options: this.apps[0] || {}, auth: () => window.firebase.auth() }; if (!this.__named[name]) throw new Error('no app ' + name); return this.__named[name]; },
       auth: () => window.firebase.__auth || (window.firebase.__auth = mkAuth()),
       database: Object.assign(() => ({ ref }), { ServerValue: { TIMESTAMP: 1700000000000 } }),
     };
@@ -123,6 +130,39 @@
     ok('Học sinh tải được nội dung file', atob(await S.fileData(id)) === 'print("de")');
     await T.delFile(id);
     ok('Xóa file xóa cả nội dung', await until(() => sfiles.length === 0) && (await dbS.get('rooms/lop1/filedata/' + id)) === null);
+
+    /* thư mục lớp (học sinh chọn lớp) */
+    ok('Mở lớp tự đăng ký vào danh sách lớp chung', (await dbT.get('classes/lop1')) && (await dbT.get('classes/lop1')).title === 'Lớp 9A1');
+    const cls = await Hub.listClasses(dbS);
+    ok('Học sinh liệt kê được các lớp để chọn', cls.length === 1 && cls[0].room === 'lop1' && cls[0].title === 'Lớp 9A1', JSON.stringify(cls));
+    await new Hub.TeacherConn(dbT, 'lop2').open({ create: true, title: 'Lớp 8B' });
+    const cls2 = await Hub.listClasses(dbS);
+    ok('Lớp mới hiện ngay, xếp theo tên (8B trước 9A1)', cls2.map((c) => c.room).join() === 'lop2,lop1', JSON.stringify(cls2));
+    await Hub.deleteClass(dbT, 'lop2');
+    ok('Xóa lớp gỡ cả dữ liệu lẫn danh sách', (await dbS.get('classes/lop2')) === null && (await dbT.get('rooms/lop2')) === null);
+
+    /* quản trị: tạo tài khoản giáo viên */
+    const AD = new Hub.AdminConn(dbT);
+    ok('Chưa phải admin khi chưa có admins/<uid>', (await AD.isAdmin()) === false);
+    await dbT.set('admins/TEACHER1', true);
+    ok('Là admin khi admins/<uid> = true', (await AD.isAdmin()) === true);
+    let tl = []; AD.onTeachers((l) => { tl = l; });
+    let eShort = null; try { await AD.addTeacher({ email: 'moi@truong.vn', name: 'B', password: '123' }); } catch (e) { eShort = e; }
+    ok('Mật khẩu ngắn bị từ chối', eShort && /6 ký tự/.test(eShort.message));
+    let eMail = null; try { await AD.addTeacher({ email: 'khong-hop-le', name: 'B', password: '123456' }); } catch (e) { eMail = e; }
+    ok('Email sai dạng bị từ chối', eMail && /Email/.test(eMail.message));
+    const nu = await AD.addTeacher({ email: 'Moi@Truong.vn', name: 'Nguyễn Văn B', password: 'abc12345' });
+    ok('Tạo giáo viên mới: cấp quyền trong teachers', (await dbT.get('teachers/' + nu)) === true, nu);
+    ok('Danh sách giáo viên có họ tên, email (chữ thường)', await until(() => tl.length === 1 && tl[0].email === 'moi@truong.vn' && tl[0].name === 'Nguyễn Văn B' && tl[0].by === 'TEACHER1'), JSON.stringify(tl));
+    ok('Tạo tài khoản bằng ứng dụng phụ và đăng xuất khỏi ứng dụng phụ', window.__secSignOut >= 1);
+    ok('Quản trị viên vẫn đăng nhập (không bị đăng xuất)', dbT.currentUid() === 'TEACHER1');
+    const old = await AD.addTeacher({ email: 'cu@truong.vn', name: 'Cũ', password: 'matcu1' });
+    ok('Email đã có tài khoản: nhập đúng mật khẩu cũ thì cấp quyền (UID cũ)', old === 'OLDUID' && (await dbT.get('teachers/OLDUID')) === true);
+    let eWrong = null; try { await AD.addTeacher({ email: 'cu@truong.vn', name: 'Cũ', password: 'saimatkhau' }); } catch (e) { eWrong = e; }
+    ok('Email đã có tài khoản + sai mật khẩu bị từ chối', eWrong && /wrong/.test(eWrong.code || eWrong.message));
+    await AD.revoke(nu);
+    ok('Thu hồi quyền giáo viên', (await dbT.get('teachers/' + nu)) === null && (await until(() => tl.length === 1)), JSON.stringify(tl));
+    AD.close();
 
     /* mất kết nối (đóng trang) */
     window.dispatchEvent(new Event('pagehide'));

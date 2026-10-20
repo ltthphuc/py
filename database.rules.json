@@ -2,57 +2,80 @@
   "rules": {
     ".read": false,
     ".write": false,
-
-    "teachers": {
-      ".read": false,
-      ".write": false
+    "admins": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": false
+      }
     },
-
+    "teachers": {
+      ".read": "auth != null && root.child('admins').child(auth.uid).val() === true",
+      ".write": "auth != null && root.child('admins').child(auth.uid).val() === true"
+    },
+    "teacherInfo": {
+      ".read": "auth != null && root.child('admins').child(auth.uid).val() === true",
+      ".write": "auth != null && root.child('admins').child(auth.uid).val() === true",
+      "$uid": {
+        ".validate": "!newData.exists() || (newData.hasChildren(['email']) && newData.child('email').isString())"
+      }
+    },
+    "classes": {
+      ".read": "auth != null",
+      ".write": "auth != null && root.child('teachers').child(auth.uid).val() === true",
+      "$room": {
+        ".validate": "!newData.exists() || (newData.hasChild('title') && newData.child('title').isString() && newData.child('title').val().length <= 60)"
+      }
+    },
     "rooms": {
       "$room": {
-        ".read":  "auth != null && root.child('teachers').child(auth.uid).val() === true",
+        ".read": "auth != null && root.child('teachers').child(auth.uid).val() === true",
         ".write": "auth != null && root.child('teachers').child(auth.uid).val() === true",
-
         "meta": {
           ".read": "auth != null"
         },
-
         "students": {
           "$sid": {
-            ".read":  "auth != null && auth.uid === $sid",
+            ".read": "auth != null && auth.uid === $sid",
             ".write": "auth != null && auth.uid === $sid && root.child('rooms').child($room).child('meta').exists()",
-            "code": { ".validate": "newData.isString() && newData.val().length <= 100000" },
-            "segs": { ".validate": "newData.isString() && newData.val().length <= 16000" },
-            "name": { ".validate": "newData.isString() && newData.val().length <= 60" },
-            "lop":  { ".validate": "newData.isString() && newData.val().length <= 60" },
-            "may":  { ".validate": "newData.isString() && newData.val().length <= 60" },
-            "bai":  { ".validate": "newData.isString() && newData.val().length <= 60" }
+            "code": {
+              ".validate": "newData.isString() && newData.val().length <= 100000"
+            },
+            "segs": {
+              ".validate": "newData.isString() && newData.val().length <= 16000"
+            },
+            "name": {
+              ".validate": "newData.isString() && newData.val().length <= 60"
+            },
+            "lop": {
+              ".validate": "newData.isString() && newData.val().length <= 60"
+            },
+            "may": {
+              ".validate": "newData.isString() && newData.val().length <= 60"
+            },
+            "bai": {
+              ".validate": "newData.isString() && newData.val().length <= 60"
+            }
           }
         },
-
         "ctl": {
           "$sid": {
             ".read": "auth != null && auth.uid === $sid"
           }
         },
-
         "cmd": {
           "$sid": {
-            ".read":  "auth != null && auth.uid === $sid",
+            ".read": "auth != null && auth.uid === $sid",
             ".write": "auth != null && auth.uid === $sid && !newData.exists()"
           }
         },
-
         "files": {
           ".read": "auth != null"
         },
-
         "filedata": {
           "$id": {
             ".read": "auth != null"
           }
         },
-
         "subs": {
           "$sid": {
             ".write": "auth != null && auth.uid === $sid && root.child('rooms').child($room).child('meta').exists()",

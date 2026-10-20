@@ -7,11 +7,11 @@ Phòng thực hành Python **chạy trên web**: học sinh viết và chạy Py
 - **Đồ họa**: turtle, matplotlib. **Thư viện**: numpy, pandas, scipy, sympy, scikit-learn, openpyxl, sqlite3…
 - **Điện thoại**: giao diện tự co giãn, có thanh phím ký tự nhanh.
 - **Giáo viên**: thẻ giám sát từng học sinh theo thời gian thực, khóa và sửa code học sinh, bấm Chạy/Dừng hộ, gõ `input()` hộ, nhắn riêng hoặc thông báo cả lớp, tải bài nộp (từng bài hoặc `.zip`), chia sẻ file bài tập, mã QR vào lớp.
+- **Chọn lớp, không gõ mã**: học sinh chọn lớp trong danh sách do giáo viên tạo. **Quản trị**: tài khoản admin tạo tài khoản + mật khẩu cho giáo viên khác ngay trên web.
 - **Đăng nhập**: học sinh vào tự do bằng mã lớp; giáo viên phải đăng nhập bằng tài khoản (Firebase Authentication + luật bảo mật). Có trang `kiemtra.html` tự kiểm tra cấu hình.
 - **Miễn phí**: GitHub Pages (phát web) + Firebase gói Spark (đồng bộ thời gian thực).
 
 **Địa chỉ ngắn:** học sinh vào <https://ltthphuc.github.io/py/hs> · giáo viên vào <https://ltthphuc.github.io/py/gv> · trang chủ <https://ltthphuc.github.io/py/>
-(đang ở chế độ thử, chưa nối Firebase)
 
 ## Dùng thử trong 1 phút
 

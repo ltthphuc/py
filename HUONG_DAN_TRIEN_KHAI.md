@@ -56,7 +56,8 @@ Cần một tài khoản Google. Tên các mục trong Firebase có thể thay �
 3. Thẻ **Users → Add user**: nhập email và mật khẩu của giáo viên → **Add user**. Sao chép giá trị cột **User UID** của tài khoản vừa tạo (dạng `a1B2c3…`).
 4. Menu **Build → Realtime Database → Create Database**: chọn vị trí gần Việt Nam (ví dụ **Singapore**), chọn **Start in locked mode** → **Enable**. Ghi lại địa chỉ ở đầu trang, dạng `https://<tên-dự-án>-default-rtdb.<vùng>.firebasedatabase.app`.
 5. Thẻ **Rules**: xóa nội dung cũ, dán toàn bộ nội dung file `database.rules.json` → **Publish**.
-6. Thẻ **Data**: bấm dấu **+** bên cạnh tên cơ sở dữ liệu → *Name* `teachers`, bấm **+** tiếp ở nhánh `teachers` → *Name* là **User UID đã sao chép ở bước 3**, *Value* gõ `true` → **Add**. Từ nay tài khoản đó mới có quyền giáo viên. Có thể thêm nhiều giáo viên bằng cách thêm nhiều UID.
+6. Thẻ **Data**: bấm dấu **+** bên cạnh tên cơ sở dữ liệu → *Name* `teachers`, bấm **+** tiếp ở nhánh `teachers` → *Name* là **User UID đã sao chép ở bước 3**, *Value* gõ `true` → **Add**. Từ nay tài khoản đó mới có quyền giáo viên.
+   Làm tương tự cho nhánh **`admins`**: thêm `admins` → con có tên là **UID của bạn**, giá trị `true`. Tài khoản này là **quản trị viên**: thấy nút **Quản trị** ở trang giáo viên để tự tạo tài khoản (email + mật khẩu) cho giáo viên khác, không cần vào Firebase nữa.
 7. Bấm bánh răng **Project settings → General → Your apps → biểu tượng `</>` (Web)** → đặt tên → **Register app**. Màn hình hiện đoạn `firebaseConfig`.
 8. Mở `config.js`, đổi `backend: 'local'` thành `backend: 'firebase'` và điền:
 
@@ -143,6 +144,13 @@ Tên miền riêng phải **mua** ở nhà cung cấp (tên miền .vn khoảng 
   - **Chế độ thử:** lần đầu bấm **Tạo tài khoản** (email + mật khẩu từ 6 ký tự); tài khoản chỉ lưu trong trình duyệt đó, chỉ để tránh vào nhầm trang giáo viên, **không phải bảo mật thật**.
 - Thêm giáo viên thứ hai: tạo thêm một người dùng trong Authentication → Users, rồi thêm UID của họ vào `teachers` (bước 6).
 - **Trang kiểm tra cấu hình** `…/kiemtra.html`: tự thử từng bước (Anonymous, kết nối cơ sở dữ liệu, luật bảo mật) và cho biết cần sửa gì; có ô thử đăng nhập giáo viên và hiện **User UID** để bạn thêm vào `teachers`.
+
+## 5c. Học sinh chọn lớp có sẵn, quản trị tài khoản giáo viên
+
+- **Chọn lớp:** khi giáo viên tạo hoặc mở một lớp, lớp tự được ghi vào danh sách chung `classes`. Học sinh mở trang sẽ thấy **danh sách lớp để chọn** (không phải gõ mã, tránh vào nhầm lớp). Nếu không thấy lớp, học sinh có thể bấm *Nhập mã lớp*. Liên kết `…/hs/?lop=<mã lớp>` tự chọn sẵn lớp.
+- **Xóa lớp:** giáo viên bấm *Xóa lớp* (phải gõ lại mã lớp) để xóa lớp cùng học sinh, bài nộp, file chia sẻ.
+- **Quản trị (chỉ tài khoản có `admins/<UID> = true`):** nút **Quản trị** → nhập họ tên, email, mật khẩu (có nút *Tạo ngẫu nhiên*) → **Tạo tài khoản giáo viên**. Hệ thống tạo tài khoản đăng nhập và cấp quyền giáo viên; quản trị viên **không bị đăng xuất**. Có thể *Gửi email đặt lại mật khẩu* hoặc *Thu hồi quyền*. Nếu email đã có tài khoản từ trước, nhập đúng mật khẩu hiện tại của tài khoản đó để cấp quyền.
+- Các nhánh dữ liệu liên quan: `classes` (mọi người đăng nhập đọc được, chỉ giáo viên ghi), `teachers` và `teacherInfo` (chỉ quản trị viên đọc/ghi), `admins` (chỉ thêm bằng Firebase Console). **Khi nâng cấp lên bản có các tính năng này, hãy dán lại `database.rules.json` mới vào Rules và Publish.**
 
 ## 6. Giới hạn của gói miễn phí và cách xử lý
 

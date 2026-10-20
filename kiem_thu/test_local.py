@@ -42,6 +42,8 @@ class Page:
         while True:
             m = await self.ws.receive()
             d = json.loads(m.data)
+            if d.get("method") == "Runtime.exceptionThrown":
+                print("   [JS lỗi]", d["params"]["exceptionDetails"].get("exception", {}).get("description", "")[:300])
             if d.get("id") == i:
                 if "error" in d:
                     raise RuntimeError(d["error"])
@@ -75,7 +77,7 @@ async def new_page(sess, w=1366, h=768, mobile=False):
         t = await r.json()
     ws = await sess.ws_connect(t["webSocketDebuggerUrl"], max_msg_size=0)
     p = Page(ws)
-    await p.cmd("Page.enable")
+    await p.cmd("Page.enable"); await p.cmd("Runtime.enable")
     await p.cmd("Emulation.setDeviceMetricsOverride", width=w, height=h, deviceScaleFactor=1.5 if not mobile else 2, mobile=mobile)
     if mobile:
         await p.cmd("Emulation.setTouchEmulationEnabled", enabled=True)
@@ -102,7 +104,7 @@ def build_kiemtra_mock():
 
 
 async def main():
-    srv = subprocess.Popen([sys.executable, "-m", "http.server", str(HTTP_PORT), "--bind", "127.0.0.1"], cwd=str(ROOT),
+    srv = subprocess.Popen([sys.executable, str(ROOT / "kiem_thu" / "serve_test.py"), str(HTTP_PORT), str(ROOT)], cwd=str(ROOT),
                            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     prof = tempfile.mkdtemp(prefix="pl_online_")
     ch = subprocess.Popen([CHROME, "--headless=new", f"--remote-debugging-port={CDP_PORT}", f"--user-data-dir={prof}",
@@ -126,10 +128,11 @@ async def main():
             await T.js("document.getElementById('lEmail').value='gv@truong.vn'; document.getElementById('lPass').value='matkhau1'; document.getElementById('lGo').click(); 1")
             check("GV: đăng nhập khi chưa có tài khoản bị từ chối", await T.wait_for("!document.getElementById('loginErr').hidden && document.getElementById('loginErr').textContent.indexOf('chưa đúng')>=0"))
             await T.js("document.getElementById('lPass').value='12'; document.getElementById('lSignup').click(); 1")
-            check("GV: mật khẩu quá ngắn bị từ chối", await T.wait_for("document.getElementById('loginErr').textContent.indexOf('6 ký tự')>=0"))
+            check("GV: mật khẩu quá ngắn bị từ chối", await T.wait_for("document.getElementById('loginErr').textContent.indexOf('6 ký tự')>=0"), await T.js("document.getElementById('loginErr').textContent + ' | hidden=' + document.getElementById('loginErr').hidden + ' | pass=' + document.getElementById('lPass').value"))
             await T.js("document.getElementById('lPass').value='matkhau1'; document.getElementById('lSignup').click(); 1")
             check("GV: tạo tài khoản và vào bảng chọn lớp", await T.wait_for("!document.getElementById('roomView').hidden"))
             await T.js("location.reload()")
+            await asyncio.sleep(2.5)
             check("GV: tải lại trang vẫn giữ phiên đăng nhập", await T.wait_for("!document.getElementById('roomView').hidden", 15))
             await T.js("document.getElementById('btnOut').click(); 1")
             check("GV: đăng xuất quay về màn hình đăng nhập", await T.wait_for("!document.getElementById('loginView').hidden"))
@@ -144,6 +147,8 @@ async def main():
             # ------------------------------------------------ học sinh vào lớp
             await goto(S, link)
             check("HS: hiện hộp thoại vào lớp (chưa có tên)", await S.wait_for("!document.getElementById('joinDlg').hidden"))
+            check("HS: danh sách lớp có sẵn do giáo viên tạo (chọn, không phải gõ)", await S.wait_for("document.getElementById('jClass').value==='9a1-tin' && !document.getElementById('jClass').disabled", 15), await S.js("document.getElementById('jClass').innerText"))
+            check("HS: tên lớp hiển thị theo tiêu đề giáo viên đặt", await S.js("[...document.getElementById('jClass').options].some(o=>o.textContent.indexOf('Lớp 9A1 Tin học')>=0)"), await S.js("JSON.stringify([...document.getElementById('jClass').options].map(o=>o.textContent)) + ' | db=' + localStorage.getItem('pylab_demo_db')"))
             await S.js("""document.getElementById('jName').value='Nguyễn Văn An'; document.getElementById('jMay').value='05'; document.getElementById('jLop').value='9A1';
                           document.getElementById('jGo').click(); 1""")
             check("HS: vào lớp thành công", await S.wait_for("document.getElementById('joinDlg').hidden && document.getElementById('connTxt').textContent.indexOf('Lớp')>=0"))
@@ -232,6 +237,7 @@ async def main():
             # ------------------------------------------------ điện thoại
             M = await new_page(sess, 390, 800, mobile=True)
             await goto(M, link)
+            await M.wait_for("document.getElementById('jClass').value==='9a1-tin'", 15)
             await M.js("document.getElementById('jName').value='Trần Thu Hà'; document.getElementById('jMay').value='12'; document.getElementById('jLop').value='9A1'; document.getElementById('jGo').click(); 1")
             check("ĐT: vào lớp", await M.wait_for("document.getElementById('joinDlg').hidden", 20))
             check("ĐT: Python tải xong", await M.wait_for("!document.getElementById('btnRun').disabled", 90))

@@ -285,10 +285,12 @@ drop.addEventListener('drop', (e) => upload([...e.dataTransfer.files]));
 ['dragover', 'drop'].forEach((n) => window.addEventListener(n, (e) => { if (!drop.contains(e.target)) e.preventDefault(); }));
 
 /* ---------------------------------------------------------------- đăng nhập, chọn lớp */
+let isAdmin = false;
 function show(view) {
-  for (const id of ['loginView', 'roomView', 'dash']) $(id).hidden = id !== view;
-  $('roomBox').hidden = view !== 'dash'; $('btnRoom').hidden = view !== 'dash';
+  for (const id of ['loginView', 'roomView', 'dash', 'adminView']) $(id).hidden = id !== view;
+  $('roomBox').hidden = view !== 'dash'; $('btnRoom').hidden = view !== 'dash' && view !== 'adminView';
   $('btnOut').hidden = view === 'loginView';
+  $('btnAdmin').hidden = !(isAdmin && view !== 'loginView' && view !== 'adminView');
 }
 function conn(ok, t) { $('conn').className = 'pill ' + (ok ? 'ok' : 'bad'); $('connTxt').textContent = t; }
 const rooms = () => { try { return JSON.parse(LS.get('pt_rooms', '[]')); } catch (e) { return []; } };
@@ -296,9 +298,18 @@ function rememberRoom(code) { const l = [code, ...rooms().filter((x) => x !== co
 function showRoomPicker(msg) {
   show('roomView');
   const er = $('roomErr'); er.hidden = !msg; er.textContent = msg || '';
-  const l = rooms(); $('recent').hidden = !l.length; const box = $('recentList'); box.textContent = '';
-  for (const r of l) { const b = document.createElement('button'); b.type = 'button'; b.className = 'rchip'; b.textContent = r; b.onclick = () => { $('rCode').value = r; }; box.appendChild(b); }
   $('rCode').value = LS.get('pt_room', ''); setTimeout(() => $('rCode').focus(), 50);
+  loadClassChips();
+}
+async function loadClassChips() {
+  const box = $('recentList'); box.textContent = '';
+  let list = [];
+  try { list = await Hub.listClasses(db); } catch (e) { list = rooms().map((r) => ({ room: r, title: r })); }
+  $('recent').hidden = !list.length;
+  for (const c of list) {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'rchip'; b.textContent = c.title + (c.title !== c.room ? ' · ' + c.room : '');
+    b.onclick = () => { $('rCode').value = c.room; }; b.ondblclick = () => $('roomForm').requestSubmit(); box.appendChild(b);
+  }
 }
 function resetView() {
   students.clear(); cards.forEach((c) => c.el.remove()); cards.clear(); current = null; $('modal').hidden = true;
@@ -325,6 +336,13 @@ $('rNew').onclick = async () => {
   try { await openRoom($('rCode').value, true, $('rTitle').value.trim()); toast('Đã tạo lớp. Gửi mã lớp hoặc mã QR cho học sinh.', 'ok'); }
   catch (er) { showRoomPicker(errText(er)); }
 };
+$('btnDelClass').onclick = async () => {
+  if (!T || !room) return;
+  if (!confirm('XÓA lớp “' + room + '” cùng toàn bộ học sinh, bài nộp và file chia sẻ của lớp?\nViệc này không khôi phục được.')) return;
+  if (prompt('Để chắc chắn, hãy gõ lại mã lớp (' + room + '):') !== room) { toast('Mã lớp gõ chưa khớp, chưa xóa.', 'warn'); return; }
+  try { const r = room; T.close(); T = null; await Hub.deleteClass(db, r); LS.set('pt_room', ''); toast('Đã xóa lớp ' + r, 'ok'); showRoomPicker(''); }
+  catch (e) { toast('Không xóa được: ' + errText(e), 'err'); }
+};
 $('btnRoom').onclick = () => { if (T) { T.close(); T = null; } showRoomPicker(''); };
 const demoLogin = () => Hub.isDemo();
 $('loginForm').addEventListener('submit', async (e) => {
@@ -345,12 +363,52 @@ $('lReset').onclick = async () => {
   try { await db.resetPassword(email); er.className = 'okmsg'; er.textContent = 'Đã gửi email đặt lại mật khẩu tới ' + email + ' (xem cả thư rác).'; er.hidden = false; }
   catch (err) { er.className = 'joinerr'; er.textContent = errText(err); er.hidden = false; }
 };
-$('btnOut').onclick = async () => { if (T) { T.close(); T = null; } await db.signOut(); show('loginView'); conn(false, 'Chưa đăng nhập'); };
+$('btnOut').onclick = async () => { if (T) { T.close(); T = null; } isAdmin = false; await db.signOut(); show('loginView'); conn(false, 'Chưa đăng nhập'); };
 async function afterLogin() {
+  try { await checkAdmin(); } catch (e) { /* bỏ qua */ }
   const last = LS.get('pt_room', '');
   if (last) { try { await openRoom(last, false); return; } catch (e) { showRoomPicker(e.message && /chưa có/.test(e.message) ? '' : errText(e)); return; } }
   showRoomPicker('');
 }
+
+/* ---------------------------------------------------------------- quản trị: tài khoản giáo viên */
+let admin = null;
+async function checkAdmin() {
+  admin = admin || new Hub.AdminConn(db);
+  isAdmin = Hub.isDemo() ? false : await admin.isAdmin();
+  $('btnAdmin').hidden = !isAdmin;
+}
+function genPass() { const c = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789'; const a = new Uint32Array(10); crypto.getRandomValues(a); return Array.from(a, (x) => c[x % c.length]).join(''); }
+function renderTeachers(list) {
+  const body = $('adBody'); body.textContent = ''; $('adEmpty').hidden = list.length > 0;
+  for (const t of list) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = '<td></td><td></td><td></td><td class="acts"><button class="btn small r">Gửi email đặt lại mật khẩu</button> <button class="btn small danger x">Thu hồi quyền</button></td>';
+    tr.children[0].textContent = t.name || ''; tr.children[1].textContent = t.email || ''; tr.children[2].textContent = fmtTime(t.created);
+    tr.querySelector('.r').onclick = async () => { try { await admin.resetPassword(t.email); toast('Đã gửi email đặt lại mật khẩu tới ' + t.email, 'ok'); } catch (e) { toast(errText(e), 'err'); } };
+    tr.querySelector('.x').onclick = async () => { if (confirm('Thu hồi quyền giáo viên của ' + t.email + '?\n(Tài khoản vẫn còn nhưng không xem được dữ liệu lớp.)')) { try { await admin.revoke(t.uid); toast('Đã thu hồi quyền', 'ok'); } catch (e) { toast(errText(e), 'err'); } } };
+    body.appendChild(tr);
+  }
+}
+$('btnAdmin').onclick = () => { admin.close(); admin.onTeachers(renderTeachers); show('adminView'); $('adMsg').hidden = true; if (!$('adPass').value) $('adPass').value = genPass(); };
+$('adBack').onclick = () => { admin.close(); if (T) show('dash'); else showRoomPicker(''); };
+$('adGen').onclick = () => { $('adPass').value = genPass(); };
+$('adForm').addEventListener('submit', async (e) => {
+  e.preventDefault(); const msg = $('adMsg'), b = $('adGo'); b.disabled = true; msg.hidden = true;
+  const email = $('adEmail').value.trim(), pw = $('adPass').value;
+  try {
+    await admin.addTeacher({ email, name: $('adName').value, password: pw });
+    msg.className = 'adcred'; msg.innerHTML = '';
+    msg.append('✓ Đã tạo tài khoản giáo viên. Hãy gửi cho giáo viên:  Email '); const b1 = document.createElement('b'); b1.textContent = email; msg.append(b1, '  Mật khẩu '); const b2 = document.createElement('b'); b2.textContent = pw; msg.append(b2, '. Giáo viên có thể tự đổi mật khẩu bằng nút “Quên mật khẩu?” ở màn hình đăng nhập.');
+    msg.hidden = false; $('adName').value = ''; $('adEmail').value = ''; $('adPass').value = genPass();
+  } catch (err) {
+    const c = (err && (err.code || err.message)) || '';
+    msg.className = 'adbad';
+    msg.textContent = /wrong-password|invalid-credential/.test(c) ? 'Email này đã có tài khoản với mật khẩu khác. Hãy nhập đúng mật khẩu hiện tại của tài khoản đó (để cấp quyền), hoặc dùng email khác.' : /PERMISSION_DENIED/i.test(c) ? 'Tài khoản của bạn chưa phải quản trị viên (admins/<UID> = true trong Realtime Database).' : errText(err);
+    msg.hidden = false;
+  }
+  b.disabled = false;
+});
 
 /* liên kết học sinh, mã QR */
 $('btnCopy').onclick = async () => {

@@ -391,23 +391,49 @@ async function joinRoom(r, silent) {
   }
 }
 
-/* hộp thoại vào lớp */
+/* hộp thoại vào lớp: học sinh CHỌN lớp trong danh sách giáo viên đã tạo (đỡ gõ sai) */
 const dlg = $('joinDlg');
+let manual = false;
+function setManual(on) {
+  manual = on; $('jRoom').hidden = !on; $('jClass').parentElement.hidden = on; $('jManual').textContent = on ? 'Chọn lớp từ danh sách' : 'Không thấy lớp của em? Nhập mã lớp';
+  if (on) $('jRoom').focus();
+}
+async function loadClasses() {
+  const sel = $('jClass'); sel.disabled = true; sel.innerHTML = '<option value="">Đang tải danh sách lớp…</option>';
+  try {
+    db = db || Hub.createDB(); await db.signInAnonymously();
+    const list = await Hub.listClasses(db);
+    sel.innerHTML = '';
+    const ph = document.createElement('option'); ph.value = ''; ph.textContent = list.length ? '— Chọn lớp của em —' : 'Chưa có lớp nào (hãy hỏi giáo viên)'; sel.appendChild(ph);
+    for (const c of list) { const o = document.createElement('option'); o.value = c.room; o.textContent = c.title + (c.title !== c.room ? '  (' + c.room + ')' : ''); sel.appendChild(o); }
+    if (room && !list.some((c) => c.room === room)) { const o = document.createElement('option'); o.value = room; o.textContent = room + '  (mã từ liên kết)'; sel.appendChild(o); }
+    sel.value = room || (list.length === 1 ? list[0].room : '');
+    sel.disabled = false;
+  } catch (e) {
+    sel.innerHTML = '<option value="">Không tải được danh sách lớp</option>'; setManual(true);
+    const er = $('joinErr'); er.textContent = 'Không tải được danh sách lớp (' + (e.message || 'lỗi mạng') + '). Em có thể nhập mã lớp.'; er.hidden = false;
+  }
+}
 function openJoin(msg) {
   $('jRoom').value = room || ''; $('jName').value = F.name.value; $('jMay').value = F.may.value; $('jLop').value = F.lop.value;
+  setManual(false);
   const er = $('joinErr'); er.hidden = !msg; er.textContent = msg || '';
-  dlg.hidden = false; setTimeout(() => (room ? $('jName') : $('jRoom')).focus(), 50);
+  dlg.hidden = false; loadClasses();
+  setTimeout(() => (room ? $('jName') : $('jClass')).focus(), 50);
 }
+$('jManual').onclick = () => setManual(!manual);
 $('btnJoin').onclick = () => openJoin('');
 $('joinForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const er = $('joinErr'); er.hidden = true;
+  const code = manual ? $('jRoom').value : $('jClass').value;
+  if (!sanitizeRoom(code)) { er.textContent = 'Em hãy chọn lớp của em trong danh sách.'; er.hidden = false; return; }
   const name = $('jName').value.trim();
   if (!name) { er.textContent = 'Em hãy nhập họ và tên.'; er.hidden = false; return; }
   F.name.value = name; F.may.value = $('jMay').value.trim(); F.lop.value = $('jLop').value.trim();
   for (const k of ['name', 'may', 'lop']) LS.set('pl_' + k, F[k].value);
   const b = $('jGo'); b.disabled = true; b.textContent = 'Đang vào…';
-  try { await joinRoom($('jRoom').value); dlg.hidden = true; }
+  try { await joinRoom(code); dlg.hidden = true; }
   catch (err) { er.textContent = err.message || 'Không vào được lớp.'; er.hidden = false; }
   b.disabled = false; b.textContent = 'Vào lớp';
 });

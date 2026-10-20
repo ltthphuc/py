@@ -11,6 +11,9 @@
 .logo.big .i { width: 24px; height: 24px; }
 
 /* hộp thoại vào lớp */
+.joinalt { margin-top: -4px; display: flex; flex-direction: column; gap: 8px; }
+.linkbtn { color: var(--blue); font: inherit; font-weight: 600; background: none; border: 0; padding: 0; cursor: pointer; text-align: left; font-size: 13.5px; }
+.linkbtn:hover { text-decoration: underline; }
 .dlgwrap { position: fixed; inset: 0; background: rgba(8,20,36,.62); z-index: 200; display: grid; place-items: center; padding: 16px; overflow: auto; backdrop-filter: blur(3px); }
 .joincard { background: #fff; border-radius: 18px; padding: 24px; width: min(540px, 100%); display: flex; flex-direction: column; gap: 14px; box-shadow: 0 24px 70px rgba(0,0,0,.4); }
 .joincard .jt { display: flex; gap: 14px; align-items: center; }

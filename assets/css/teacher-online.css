@@ -55,3 +55,13 @@
 .loginlinks a:hover, .linkbtn:hover { text-decoration: underline; }
 .gatecard .jactions .btn { flex: 1; justify-content: center; }
 .okmsg { padding: 10px 14px; background: var(--green-l); color: var(--green-d); border-radius: 8px; font-weight: 600; }
+
+.adminwrap { padding: 20px 22px 30px; } .adminin { max-width: 1000px; margin: 0 auto; }
+.adbox { margin: 0 0 18px; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 16px; box-shadow: 0 1px 3px rgba(15,23,42,.05); } .adbox h3 { margin: 0 0 10px; }
+.adrow { display: grid; grid-template-columns: 1fr 1.2fr 1.2fr; gap: 12px; } .adrow .inp { width: 100%; }
+.pwrow { display: flex; gap: 8px; } .pwrow .inp { flex: 1; min-width: 0; }
+.adact { margin-top: 12px; } .adnote { color: var(--muted); font-size: 13px; line-height: 1.55; }
+.adcred { padding: 12px 14px; background: var(--green-l); color: var(--green-d); border-radius: 10px; line-height: 1.7; }
+.adcred b { font-family: var(--mono); background: #fff; padding: 1px 8px; border-radius: 6px; }
+.adbad { padding: 10px 14px; background: var(--red-l); color: var(--red-d); border-radius: 8px; font-weight: 600; }
+@media (max-width: 820px) { .adminwrap { padding: 12px 10px; } .adrow { grid-template-columns: 1fr; } .pwrow { flex-wrap: wrap; } }
