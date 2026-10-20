@@ -305,7 +305,7 @@ async function openRoom(code, create, title) {
   await t.open({ create, title });
   T = t; room = code; rememberRoom(code); resetView();
   $('roomName').textContent = (t.meta.title && t.meta.title !== code ? t.meta.title + ' · ' : '') + code;
-  const url = new URL('hocsinh.html', location.href); url.searchParams.set('lop', code);
+  const url = new URL('hs/', location.href); url.searchParams.set('lop', code);   // địa chỉ ngắn: …/hs/?lop=<mã lớp>
   $('stuLink').textContent = url.href.replace(/^https?:\/\//, ''); $('stuLink').dataset.url = url.href;
   T.onStudents(upsert); T.onSubs(onSubs); T.onFiles(renderFiles);
   show('dash');

@@ -9,7 +9,8 @@ Phòng thực hành Python **chạy trên web**: học sinh viết và chạy Py
 - **Giáo viên**: thẻ giám sát từng học sinh theo thời gian thực, khóa và sửa code học sinh, bấm Chạy/Dừng hộ, gõ `input()` hộ, nhắn riêng hoặc thông báo cả lớp, tải bài nộp (từng bài hoặc `.zip`), chia sẻ file bài tập, mã QR vào lớp.
 - **Miễn phí**: GitHub Pages (phát web) + Firebase gói Spark (đồng bộ thời gian thực).
 
-**Trang chạy thử (chế độ thử, chưa nối Firebase): <https://ltthphuc.github.io/python-lab-online/>**
+**Địa chỉ ngắn:** học sinh vào <https://ltthphuc.github.io/py/hs> · giáo viên vào <https://ltthphuc.github.io/py/gv> · trang chủ <https://ltthphuc.github.io/py/>
+(đang ở chế độ thử, chưa nối Firebase)
 
 ## Dùng thử trong 1 phút
 

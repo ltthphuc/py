@@ -97,6 +97,28 @@ git push -u origin main
 
 (Khuyến nghị) Hạn chế khóa API chỉ dùng cho web của bạn: vào <https://console.cloud.google.com/apis/credentials> → chọn *Browser key* của dự án → **Website restrictions** → thêm `https://<tên-tài-khoản>.github.io/*`.
 
+### Địa chỉ ngắn cho học sinh và giáo viên
+
+Sau khi bật Pages, mỗi người chỉ cần nhớ **tên-tài-khoản.github.io/tên-kho**. Dự án có sẵn hai đường dẫn tắt:
+
+| Địa chỉ | Mở trang |
+|---|---|
+| `…github.io/<tên-kho>/` | Trang chủ (chọn học sinh / giáo viên) |
+| `…github.io/<tên-kho>/hs` | Trang học sinh (tự giữ `?lop=…` nếu có) |
+| `…github.io/<tên-kho>/gv` | Trang giáo viên |
+
+Muốn địa chỉ ngắn hơn nữa, **đổi tên kho** thành tên ngắn (GitHub → Settings → Repository name, ví dụ `py`). Địa chỉ Pages đổi theo ngay, nhưng địa chỉ cũ sẽ không còn dùng được.
+
+### Dùng tên miền riêng (ví dụ pylab.vn) — tùy chọn, có phí
+
+Tên miền riêng phải **mua** ở nhà cung cấp (tên miền .vn khoảng vài trăm nghìn đồng/năm, .com khoảng 250.000–300.000 đồng/năm). Sau khi mua:
+
+1. Ở trang quản lý DNS của nhà cung cấp, thêm bản ghi:
+   - miền gốc (`pylab.vn`): 4 bản ghi **A** tới `185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153`;
+   - hoặc miền phụ (`lop.pylab.vn`): 1 bản ghi **CNAME** tới `<tên-tài-khoản>.github.io`.
+2. GitHub → **Settings → Pages → Custom domain**: nhập tên miền → Save → đợi dấu tích xanh DNS check → bật **Enforce HTTPS**.
+3. Firebase không cần đổi gì (Anonymous và Email/Password hoạt động với mọi tên miền). Nếu đã giới hạn khóa API theo địa chỉ web (mục bảo mật ở trên), nhớ thêm `https://<tên-miền>/*`.
+
 ## 5. Cách dùng hằng ngày
 
 **Giáo viên**
