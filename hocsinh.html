@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f2742">
+<title>Python Lab Online - Học sinh</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232563eb'/%3E%3Cpath d='M10 11l-4 5 4 5M22 11l4 5-4 5M18 9l-4 14' stroke='white' stroke-width='2.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="vendor/codemirror/codemirror.css">
+<link rel="stylesheet" href="assets/css/app.css">
+<link rel="stylesheet" href="assets/css/student.css">
+<link rel="stylesheet" href="assets/css/mobile.css">
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <a class="brand" href="index.html" title="Trang chủ">
+      <div class="logo"><svg class="i" viewBox="0 0 24 24"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5M14 4l-4 16"/></svg></div>
+      <div><div class="b1">Python Lab <span class="online-tag">ONLINE</span></div><div class="b2">Phòng thực hành lập trình</div></div>
+    </a>
+    <div class="top-right">
+      <button id="btnJoin" class="pill pillbtn" title="Vào lớp / đổi lớp"><span class="dot"></span><span id="connTxt">Chưa vào lớp</span></button>
+      <button id="btnFiles" class="btn light"><svg class="i" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span class="lbl">Bài tập của thầy cô</span> <span id="fileBadge" class="badge" hidden>0</span></button>
+    </div>
+  </header>
+  <div id="demoBar" class="demobar" hidden>Đang ở <b>chế độ thử</b>: chỉ trao đổi được giữa các tab trong cùng một trình duyệt. Để chạy thật trên mạng, hãy làm theo HUONG_DAN_TRIEN_KHAI.md.</div>
+
+  <section class="infobar">
+    <label class="field w-may"><span>STT</span><input id="fMay" class="inp" maxlength="6" inputmode="numeric" placeholder="05" autocomplete="off"></label>
+    <label class="field w-name"><span>Họ và tên</span><input id="fName" class="inp" maxlength="40" placeholder="Nguyễn Văn A" autocomplete="name"></label>
+    <label class="field w-lop"><span>Lớp</span><input id="fLop" class="inp" maxlength="10" placeholder="9A1" autocomplete="off"></label>
+    <label class="field w-bai"><span>Bài số</span><input id="fBai" class="inp" maxlength="6" placeholder="1" autocomplete="off"></label>
+    <div class="spacer"></div>
+    <div class="info-actions">
+      <button id="btnOpen" class="btn" title="Mở một file Python (.py) có sẵn trong máy này vào khung soạn thảo"><svg class="i" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span class="lbl">Mở file .py</span></button>
+      <input id="fileOpen" type="file" accept=".py,.txt,text/x-python,text/plain" hidden>
+      <button id="btnNew" class="btn" title="Xóa trang, bắt đầu bài mới"><svg class="i" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M12 11v6M9 14h6"/></svg><span class="lbl">Bài mới</span></button>
+    </div>
+  </section>
+
+  <div class="mobseg" id="mobSeg">
+    <button id="segCode" class="active"><svg class="i" viewBox="0 0 24 24"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5"/></svg>Soạn code</button>
+    <button id="segOut"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9l3 3-3 3M13 15h4"/></svg>Kết quả <span id="segDot" class="gdot2" hidden></span></button>
+  </div>
+
+  <main class="work" id="work" data-view="code">
+    <section class="pane pane-code">
+      <div class="pane-head">
+        <div class="tab"><svg class="i" viewBox="0 0 24 24"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5"/></svg><span id="fileName">bai1.py</span></div>
+        <div class="grow"></div>
+        <button id="fsDown" class="btn ghost small hide-m" title="Chữ nhỏ lại">A−</button>
+        <button id="fsUp" class="btn ghost small hide-m" title="Chữ to lên">A+</button>
+        <button id="btnRun" class="btn run" disabled title="Chạy chương trình (Ctrl+Enter hoặc F5)"><svg class="i" viewBox="0 0 24 24" style="fill:currentColor"><path d="M7 4l13 8-13 8z"/></svg><span id="runTxt">Đang tải Python…</span></button>
+        <button id="btnStop" class="btn stop" disabled title="Dừng chương trình"><svg class="i" viewBox="0 0 24 24" style="fill:currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg><span class="lbl">Dừng</span></button>
+        <button id="btnSubmit" class="btn primary" title="Gửi bài cho giáo viên"><svg class="i" viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/></svg><span class="lbl">Nộp bài</span></button>
+      </div>
+      <div id="lockBanner" class="banner" hidden><svg class="i" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Giáo viên đang chỉnh sửa bài của em — vui lòng chờ trong giây lát…</div>
+      <div class="editor-wrap"><textarea id="code"></textarea></div>
+      <div id="qk" class="qk" aria-label="Phím ký tự nhanh">
+        <button data-k="tab">Tab</button><button data-k=":">:</button><button data-k="(">(</button><button data-k=")">)</button>
+        <button data-k="[">[</button><button data-k="]">]</button><button data-k="{">{</button><button data-k="}">}</button>
+        <button data-k='"'>"</button><button data-k="'">'</button><button data-k="=">=</button><button data-k="#">#</button>
+        <button data-k="_">_</button><button data-k="+">+</button><button data-k="-">-</button><button data-k="*">*</button>
+        <button data-k="/">/</button><button data-k="%">%</button><button data-k="&lt;">&lt;</button><button data-k="&gt;">&gt;</button>
+        <button data-k=",">,</button><button data-k=".">.</button><button data-k="\">\</button><button data-k="undo">↶</button>
+      </div>
+    </section>
+
+    <div id="splitter" class="splitter" title="Kéo để đổi kích thước"></div>
+
+    <section class="pane pane-out">
+      <div class="pane-head">
+        <button id="tabOut" class="ptab active"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9l3 3-3 3M13 15h4"/></svg>Kết quả</button>
+        <button id="tabGfx" class="ptab"><svg class="i" viewBox="0 0 24 24"><path d="M3 17c3-9 6-9 9-3s6 3 9-8"/></svg>Đồ họa<span id="gfxDot" class="gdot" hidden></span></button>
+        <div class="grow"></div>
+        <button id="btnDownload" class="btn ghost small" title="Tải bài về máy (.py)"><svg class="i" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg><span class="lbl">Tải .py</span></button>
+        <button id="btnClear" class="btn ghost small" title="Xóa nhanh phần kết quả"><svg class="i" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg><span class="lbl">Xóa kết quả</span></button>
+      </div>
+      <div id="console" class="console" tabindex="0"><span class="cons-seg-m">Nhấn “Chạy” để xem kết quả tại đây.</span></div>
+      <div id="gfxWrap" class="gfx-wrap" hidden><canvas id="gfx"></canvas><canvas id="gfxTop"></canvas><div id="gfxImgs" class="gfx-imgs" hidden></div></div>
+      <div id="hint" class="hint" hidden></div>
+    </section>
+  </main>
+
+  <footer class="statusbar">
+    <span id="stState" class="st-state"><span class="dot"></span><span id="stTxt">Đang tải Python…</span></span>
+    <span id="stSub" class="st-sub"></span>
+    <div class="grow"></div>
+    <span class="credit">Design By: Nguyễn Hữu Phúc - THCS Lê Thánh Tông - ZL: 0373.022.325</span>
+    <span id="stPos">Dòng 1, Cột 1</span>
+    <span id="stVer">Python</span>
+  </footer>
+</div>
+
+<!-- Hộp thoại vào lớp -->
+<div id="joinDlg" class="dlgwrap" hidden>
+  <form class="joincard" id="joinForm" autocomplete="off">
+    <div class="jt"><div class="logo big"><svg class="i" viewBox="0 0 24 24"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5M14 4l-4 16"/></svg></div><div><h2>Vào lớp học</h2><p>Nhập mã lớp thầy/cô cho để thầy/cô xem bài và nhận bài nộp của em.</p></div></div>
+    <label class="field"><span>Mã lớp</span><input id="jRoom" class="inp big" maxlength="32" placeholder="ví dụ: 9a1-tin" autocapitalize="off" autocorrect="off" spellcheck="false"></label>
+    <div class="row2">
+      <label class="field"><span>Họ và tên</span><input id="jName" class="inp" maxlength="40" placeholder="Nguyễn Văn A"></label>
+      <label class="field sm"><span>STT</span><input id="jMay" class="inp" maxlength="6" inputmode="numeric" placeholder="05"></label>
+      <label class="field sm"><span>Lớp</span><input id="jLop" class="inp" maxlength="10" placeholder="9A1"></label>
+    </div>
+    <div id="joinErr" class="joinerr" hidden></div>
+    <div class="jactions">
+      <button type="submit" id="jGo" class="btn primary big">Vào lớp</button>
+      <button type="button" id="jSolo" class="btn big">Luyện tập một mình</button>
+    </div>
+    <p class="jnote">Luyện tập một mình: em vẫn viết và chạy Python bình thường, nhưng thầy/cô không xem được và em chưa nộp bài được.</p>
+  </form>
+</div>
+
+<aside id="filesPanel" class="drawer" hidden>
+  <div class="drawer-head"><b>Bài tập của thầy cô</b><button id="filesClose" class="btn ghost small">Đóng</button></div>
+  <div id="filesList" class="drawer-body"></div>
+  <div class="drawer-foot">Bấm vào tên file để tải về máy.</div>
+</aside>
+<div id="toasts"></div>
+
+<script src="config.js"></script>
+<script src="vendor/codemirror/codemirror.js"></script>
+<script src="vendor/codemirror/python.js"></script>
+<script src="vendor/codemirror/closebrackets.js"></script>
+<script src="vendor/codemirror/matchbrackets.js"></script>
+<script src="vendor/codemirror/active-line.js"></script>
+<script src="vendor/codemirror/comment.js"></script>
+<script>if (window.PYLAB_CONFIG && PYLAB_CONFIG.backend === 'firebase') { ['app', 'auth', 'database'].forEach(function (n) { document.write('<script src="vendor/firebase/firebase-' + n + '-compat.js"><\/script>'); }); }</script>
+<script src="assets/js/util.js"></script>
+<script src="assets/js/db-local.js"></script>
+<script src="assets/js/db-firebase.js"></script>
+<script src="assets/js/hub.js"></script>
+<script src="assets/js/student.js"></script>
+</body>
+</html>

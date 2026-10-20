@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><title>Kiểm thử lớp FirebaseDB bằng SDK giả lập</title></head>
+<body><pre id="log">đang chạy…</pre>
+<!-- Trang này nạp lớp FirebaseDB THẬT của dự án nhưng thay SDK Firebase bằng bản giả lập (dựng trên LocalDB),
+     để kiểm tra các lời gọi API (ref, set, update, push, on, off, onDisconnect, auth…) và toàn bộ logic Hub. -->
+<script>window.PYLAB_CONFIG = { backend: 'firebase', firebase: { apiKey: 'test', databaseURL: 'https://test.firebaseio.com' }, maxFileKB: 700 };</script>
+<script src="../assets/js/util.js"></script>
+<script src="../assets/js/db-local.js"></script>
+<script>
+  /* ----- SDK Firebase giả lập ----- */
+  (function () {
+    const L = new LocalDB();
+    const snap = (v, k) => ({ val: () => (v === undefined ? null : v), key: k });
+    function ref(path) {
+      const key = path.split('/').pop();
+      const r = {
+        key,
+        get: async () => snap(await L.get(path), key),
+        set: (v) => { if (v === undefined) throw new Error('set(undefined)'); return L.set(path, v); },
+        update: (o) => { for (const k in o) if (o[k] === undefined) throw new Error('update: undefined tại ' + k); return L.update(path, o); },
+        remove: () => L.remove(path),
+        push() { const k = 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); const c = ref(path + '/' + k); return c; },
+        on(ev, cb) {
+          if (path === '.info/connected') { setTimeout(() => cb(snap(true, 'connected')), 0); return cb; }
+          const off = L.on(path, ev, (v, k) => cb(snap(v, k)));
+          (ref._h = ref._h || []).push({ ev, cb, off }); window.__handlers = (window.__handlers || 0) + 1; return cb;
+        },
+        off(ev, h) { /* hủy đăng ký */ window.__handlers = (window.__handlers || 1) - 1; },
+        onDisconnect: () => ({ set: (v) => L.onDisconnectSet(path, v) }),
+      };
+      return r;
+    }
+    const mkAuth = () => { let user = null; return {
+      onAuthStateChanged(cb) { setTimeout(() => cb(user), 0); return () => {}; },
+      signInAnonymously: async () => { user = { uid: 'S' + Math.random().toString(36).slice(2, 7), isAnonymous: true }; return { user }; },
+      signInWithEmailAndPassword: async (e, p) => { if (p !== 'ok') { const x = new Error('wrong'); x.code = 'auth/wrong-password'; throw x; } user = { uid: 'TEACHER1', isAnonymous: false }; return { user }; },
+      signOut: async () => { user = null; },
+      get currentUser() { return user; },
+    }; };
+    window.firebase = {
+      apps: [], initializeApp(c) { this.apps.push(c); },
+      auth: () => window.firebase.__auth || (window.firebase.__auth = mkAuth()),
+      database: Object.assign(() => ({ ref }), { ServerValue: { TIMESTAMP: 1700000000000 } }),
+    };
+  })();
+</script>
+<script src="../assets/js/db-firebase.js"></script>
+<script src="../assets/js/hub.js"></script>
+<script>
+(async () => {
+  const checks = [];
+  const ok = (n, c, x) => checks.push([n, !!c, c ? '' : String(x)]);
+  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+  async function until(f, t = 3000) { const t0 = Date.now(); while (Date.now() - t0 < t) { if (f()) return true; await wait(30); } return false; }
+  try {
+    const dbT = Hub.createDB(), dbS = Hub.createDB();
+    ok('createDB trả về FirebaseDB', dbT.kind === 'firebase');
+    // mỗi "người dùng" có một đối tượng auth riêng
+    const tAuth = { _u: null, onAuthStateChanged(cb) { setTimeout(() => cb(this._u), 0); return () => {}; }, signInWithEmailAndPassword: async function (e, p) { if (p !== 'ok') { const x = new Error('wrong'); x.code = 'auth/wrong-password'; throw x; } this._u = { uid: 'TEACHER1', isAnonymous: false }; return { user: this._u }; }, signOut: async function () { this._u = null; }, get currentUser() { return this._u; } };
+    const sAuth = { _u: null, onAuthStateChanged(cb) { setTimeout(() => cb(this._u), 0); return () => {}; }, signInAnonymously: async function () { this._u = { uid: 'STU' + Math.random().toString(36).slice(2, 6), isAnonymous: true }; return { user: this._u }; }, get currentUser() { return this._u; } };
+    dbT.auth = tAuth; dbS.auth = sAuth;
+
+    let bad = null; try { await dbT.signInTeacher('a@b.c', 'sai'); } catch (e) { bad = e; }
+    ok('Đăng nhập sai mật khẩu bị từ chối', bad && /wrong/.test(bad.code));
+    ok('Đăng nhập giáo viên đúng', (await dbT.signInTeacher('a@b.c', 'ok')) === 'TEACHER1');
+    ok('restoreTeacher thấy tài khoản giáo viên', (await dbT.restoreTeacher()) === 'TEACHER1');
+
+    /* giáo viên tạo lớp, lắng nghe */
+    const T = new Hub.TeacherConn(dbT, 'lop1');
+    let errOpen = null; try { await new Hub.TeacherConn(dbT, 'chuaco').open({}); } catch (e) { errOpen = e; }
+    ok('Mở lớp chưa tồn tại báo lỗi gợi ý Tạo lớp', errOpen && /Tạo lớp/.test(errOpen.message));
+    const meta = await T.open({ create: true, title: 'Lớp 9A1' });
+    ok('Tạo lớp ghi meta (title, owner)', meta.title === 'Lớp 9A1' && meta.owner === 'TEACHER1', JSON.stringify(meta));
+    const seen = {}; T.onStudents((id, s) => { if (s) seen[id] = s; else delete seen[id]; });
+    let subs = []; T.onSubs((l) => { subs = l; });
+    let tfiles = []; T.onFiles((l) => { tfiles = l; });
+
+    /* học sinh vào lớp */
+    const S = new Hub.StudentConn(dbS, 'lop1');
+    let err2 = null; try { await new Hub.StudentConn(dbS, 'sai-ma').join({ name: 'x' }); } catch (e) { err2 = e; }
+    ok('Học sinh vào mã lớp sai bị báo lỗi', err2 && /chưa tồn tại/.test(err2.message));
+    await S.join({ may: '05', name: 'Nguyễn Văn An', lop: '9A1', bai: '3', code: 'print(1)', segs: '[]', status: 'idle', errLine: 0, waiting: false });
+    ok('Giáo viên thấy học sinh vào lớp (online)', await until(() => seen[S.uid] && seen[S.uid].online === true), JSON.stringify(seen));
+    ok('Thông tin học sinh đúng', seen[S.uid] && seen[S.uid].name === 'Nguyễn Văn An' && seen[S.uid].may === '05' && seen[S.uid].code === 'print(1)');
+
+    /* trạng thái trực tiếp */
+    await S.setState({ code: 'print(2)', segs: JSON.stringify([{ k: 'o', s: '2\n' }]), status: 'done' });
+    ok('Cập nhật code, kết quả, trạng thái tới giáo viên', await until(() => seen[S.uid].code === 'print(2)' && seen[S.uid].segs[0].s === '2\n' && seen[S.uid].status === 'done'), JSON.stringify(seen[S.uid]));
+    ok('Giáo viên đánh dấu "đang gõ" khi code đổi', seen[S.uid].last_code > 0);
+
+    /* lệnh giáo viên → học sinh */
+    const got = []; S.onCmd((c) => got.push(c));
+    await T.cmd(S.uid, { t: 'run', code: 'print(9)' }); await T.cmd(S.uid, { t: 'stop' }); await T.cmd(S.uid, { t: 'input', text: 'abc' }); await T.notifyMany([S.uid], 'Chú ý');
+    ok('Học sinh nhận đủ 4 lệnh run/stop/input/notify', await until(() => got.length === 4), JSON.stringify(got));
+    ok('Lệnh run mang theo code', got[0] && got[0].t === 'run' && got[0].code === 'print(9)');
+    await wait(100);
+    ok('Lệnh đã xử lý bị xóa khỏi hàng đợi', (await dbT.get('rooms/lop1/cmd/' + S.uid)) === null);
+
+    /* khóa + sửa code */
+    let ctl = {}; S.onCtl((c) => { ctl = c; });
+    await T.setLock(S.uid, true); await T.setEdit(S.uid, 'print("thầy sửa")');
+    ok('Học sinh nhận khóa và code do giáo viên sửa', await until(() => ctl.locked === true && ctl.edit && ctl.edit.code === 'print("thầy sửa")'), JSON.stringify(ctl));
+    ok('Giáo viên thấy trạng thái khóa', await until(() => seen[S.uid].locked === true));
+    await T.setLock(S.uid, false);
+    ok('Mở khóa xóa luôn ctl', await until(() => !ctl.locked && !ctl.edit), JSON.stringify(ctl));
+
+    /* nộp bài (2 lần) */
+    const r1 = await S.submit({ may: '05', name: 'Nguyễn Văn An', lop: '9A1', bai: '3', code: 'print("lần 1")' });
+    await wait(10);
+    const r2 = await S.submit({ may: '05', name: 'Nguyễn Văn An', lop: '9A1', bai: '3', code: 'print("lần 2")' });
+    ok('Tên file nộp đúng mẫu', r1.file === '05_Nguyễn_Văn_An_Bai3.py', r1.file);
+    ok('Giáo viên nhận 2 bản nộp', await until(() => subs.length === 2), JSON.stringify(subs));
+    ok('Bản mới nhất xếp đầu', subs[0] && subs[0].code.includes('lần 2') || subs[0].ts >= subs[1].ts);
+    ok('Hồ sơ học sinh ghi nhận đã nộp', await until(() => seen[S.uid].submit_file === r1.file && seen[S.uid].submitted_at > 0));
+    await T.deleteSub(S.uid, subs[1].key);
+    ok('Giáo viên xóa được một bản nộp', await until(() => subs.length === 1));
+
+    /* chia sẻ file */
+    let sfiles = []; S.onFiles((l) => { sfiles = l; });
+    const id = await T.addFile('De bai.py', btoa('print("de")'), 11);
+    ok('Giáo viên thấy file đã chia sẻ', await until(() => tfiles.length === 1 && tfiles[0].name === 'De bai.py'));
+    ok('Học sinh thấy danh sách file', await until(() => sfiles.length === 1 && sfiles[0].name === 'De bai.py'));
+    ok('Học sinh tải được nội dung file', atob(await S.fileData(id)) === 'print("de")');
+    await T.delFile(id);
+    ok('Xóa file xóa cả nội dung', await until(() => sfiles.length === 0) && (await dbS.get('rooms/lop1/filedata/' + id)) === null);
+
+    /* mất kết nối (đóng trang) */
+    window.dispatchEvent(new Event('pagehide'));
+    ok('Đóng trang → học sinh hiện Mất kết nối', await until(() => seen[S.uid].online === false), JSON.stringify(seen[S.uid]));
+    await T.removeStudent(S.uid);
+    ok('Giáo viên xóa học sinh khỏi lớp', await until(() => !seen[S.uid]));
+    S.leave(); T.close();
+  } catch (e) { ok('Ngoại lệ không mong đợi', false, e && (e.stack || e.message || e)); }
+  window.__checks = checks; window.__done = true;
+  document.getElementById('log').textContent = checks.map((c) => (c[1] ? 'PASS ' : 'FAIL ') + c[0] + (c[2] ? '  -> ' + c[2] : '')).join('\n');
+})();
+</script>
+</body></html>

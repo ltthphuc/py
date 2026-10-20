@@ -1,0 +1,84 @@
+:root {
+  --navy: #0f2742; --navy2: #17365c;
+  --bg: #eef2f7; --panel: #ffffff; --line: #dde4ee; --line2: #eef2f7;
+  --text: #0f172a; --muted: #64748b;
+  --blue: #2563eb; --blue-d: #1d4ed8; --blue-l: #dbeafe;
+  --green: #16a34a; --green-d: #15803d; --green-l: #dcfce7;
+  --red: #dc2626; --red-d: #b91c1c; --red-l: #fee2e2;
+  --amber: #d97706; --amber-l: #fef3c7;
+  --cons: #0b1220; --cons-text: #e2e8f0;
+  --mono: "Cascadia Code", "Cascadia Mono", Consolas, "Courier New", monospace;
+  --sans: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+  --r: 10px;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { font-family: var(--sans); font-size: 14px; color: var(--text); background: var(--bg); -webkit-font-smoothing: antialiased; }
+button, input, select, textarea { font-family: inherit; font-size: inherit; color: inherit; }
+[hidden] { display: none !important; }
+svg.i { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+
+/* ---- nút ---- */
+.btn { display: inline-flex; align-items: center; gap: 7px; height: 36px; padding: 0 14px; border: 1px solid var(--line); background: #fff; color: var(--text);
+  border-radius: 8px; cursor: pointer; font-weight: 600; white-space: nowrap; transition: background .12s, border-color .12s, box-shadow .12s, transform .05s; }
+.btn:hover:not(:disabled) { background: #f6f8fb; border-color: #c5d0e0; }
+.btn:active:not(:disabled) { transform: translateY(1px); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn.primary { background: var(--blue); border-color: var(--blue); color: #fff; box-shadow: 0 1px 2px rgba(37,99,235,.35); }
+.btn.primary:hover:not(:disabled) { background: var(--blue-d); border-color: var(--blue-d); }
+.btn.run { background: var(--green); border-color: var(--green); color: #fff; box-shadow: 0 1px 2px rgba(22,163,74,.35); }
+.btn.run:hover:not(:disabled) { background: var(--green-d); border-color: var(--green-d); }
+.btn.stop { background: #fff; border-color: #f0b4b4; color: var(--red); }
+.btn.stop:hover:not(:disabled) { background: var(--red-l); border-color: var(--red); }
+.btn.danger { color: var(--red); }
+.btn.danger:hover:not(:disabled) { background: var(--red-l); border-color: #f0b4b4; }
+.btn.ghost { background: transparent; border-color: transparent; color: var(--muted); }
+.btn.ghost:hover:not(:disabled) { background: rgba(100,116,139,.12); border-color: transparent; }
+.btn.small { height: 28px; padding: 0 10px; font-size: 12.5px; }
+.btn.light { background: rgba(255,255,255,.1); border-color: rgba(255,255,255,.22); color: #fff; }
+.btn.light:hover:not(:disabled) { background: rgba(255,255,255,.2); border-color: rgba(255,255,255,.35); }
+
+/* ---- ô nhập ---- */
+.field { display: flex; flex-direction: column; gap: 3px; }
+.field > span { font-size: 11.5px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.inp { height: 36px; padding: 0 11px; border: 1px solid var(--line); border-radius: 8px; background: #fff; outline: none; transition: border-color .12s, box-shadow .12s; }
+.inp:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,.15); }
+.inp.bad { border-color: var(--red); box-shadow: 0 0 0 3px rgba(220,38,38,.14); }
+
+/* ---- pill, badge ---- */
+.pill { display: inline-flex; align-items: center; gap: 7px; height: 26px; padding: 0 11px; border-radius: 99px; font-size: 12.5px; font-weight: 600; background: rgba(255,255,255,.12); color: #e2e8f0; }
+.pill .dot { width: 8px; height: 8px; border-radius: 50%; background: #94a3b8; }
+.pill.ok .dot { background: #4ade80; box-shadow: 0 0 0 3px rgba(74,222,128,.25); }
+.pill.bad .dot { background: #f87171; box-shadow: 0 0 0 3px rgba(248,113,113,.25); }
+.badge { min-width: 20px; height: 20px; padding: 0 6px; border-radius: 10px; background: var(--blue); color: #fff; font-size: 11.5px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; }
+
+/* ---- toast ---- */
+#toasts { position: fixed; right: 18px; bottom: 44px; display: flex; flex-direction: column; gap: 8px; z-index: 9999; pointer-events: none; }
+.toast { max-width: 380px; padding: 11px 16px; border-radius: 10px; background: #0f172a; color: #fff; box-shadow: 0 10px 28px rgba(15,23,42,.3); font-weight: 600;
+  animation: tin .22s ease-out; border-left: 4px solid var(--blue); }
+.toast.ok { border-left-color: #4ade80; } .toast.err { border-left-color: #f87171; } .toast.warn { border-left-color: #fbbf24; }
+@keyframes tin { from { transform: translateY(10px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* ---- CodeMirror giao diện sáng ---- */
+.CodeMirror { height: 100%; font-family: var(--mono); font-size: var(--code-fs, 15px); line-height: 1.55; color: #1e293b; background: #fff; }
+.CodeMirror-gutters { background: #f8fafc; border-right: 1px solid var(--line); }
+.CodeMirror-linenumber { color: #94a3b8; padding: 0 10px 0 8px; }
+.CodeMirror-activeline-background { background: #f1f6ff; }
+.CodeMirror-cursor { border-left: 2px solid var(--blue); }
+.CodeMirror-selected { background: #cfe0ff !important; }
+.CodeMirror-focused .CodeMirror-selected { background: #bcd3ff !important; }
+.cm-s-default .cm-keyword { color: #7c3aed; font-weight: 600; }
+.cm-s-default .cm-builtin { color: #0369a1; }
+.cm-s-default .cm-string, .cm-s-default .cm-string-2 { color: #15803d; }
+.cm-s-default .cm-number { color: #b45309; }
+.cm-s-default .cm-comment { color: #94a3b8; font-style: italic; }
+.cm-s-default .cm-def { color: #1d4ed8; font-weight: 600; }
+.cm-s-default .cm-variable-2, .cm-s-default .cm-variable-3 { color: #0f766e; }
+.cm-s-default .cm-operator { color: #475569; }
+.cm-s-default .cm-meta { color: #be185d; }
+.CodeMirror-matchingbracket { background: #fde68a; color: inherit !important; border-radius: 2px; }
+.cm-errline { background: #fee2e2 !important; }
+.cm-errgutter { color: var(--red); font-weight: 800; }
+
+/* ---- bảng console (dùng chung HS + GV) ---- */
+.cons-seg-o { color: var(--cons-text); } .cons-seg-e { color: #fca5a5; } .cons-seg-i { color: #7dd3fc; } .cons-seg-m { color: #94a3b8; font-style: italic; }

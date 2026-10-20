@@ -1,0 +1,4 @@
+__pycache__/
+kiem_thu/anh/
+*.pyc
+.DS_Store

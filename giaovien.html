@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b1f36">
+<title>Python Lab Online - Giáo viên</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23dc6b2f'/%3E%3Cpath d='M10 11l-4 5 4 5M22 11l4 5-4 5M18 9l-4 14' stroke='white' stroke-width='2.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="vendor/codemirror/codemirror.css">
+<link rel="stylesheet" href="assets/css/app.css">
+<link rel="stylesheet" href="assets/css/teacher.css">
+<link rel="stylesheet" href="assets/css/mobile.css">
+<link rel="stylesheet" href="assets/css/teacher-online.css">
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <a class="brand" href="index.html" title="Trang chủ">
+      <div class="logo"><svg class="i" viewBox="0 0 24 24"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5M14 4l-4 16"/></svg></div>
+      <div><div class="b1">Python Lab <span class="role">GIÁO VIÊN</span></div><div class="b2">Giám sát &amp; thu bài trực tuyến</div></div>
+    </a>
+    <div class="urlbox" id="roomBox" hidden>
+      <span class="chip roomchip" title="Mã lớp"><svg class="i" viewBox="0 0 24 24"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6"/></svg><b id="roomName">—</b></span>
+      <span class="chip linkchip"><span id="stuLink" class="mono"></span><button id="btnCopy" type="button">Sao chép</button><button id="btnQR" type="button">QR</button></span>
+    </div>
+    <div class="top-right">
+      <span id="conn" class="pill"><span class="dot"></span><span id="connTxt">Chưa đăng nhập</span></span>
+      <button id="btnRoom" class="btn light" hidden title="Đổi lớp"><svg class="i" viewBox="0 0 24 24"><path d="M17 1l4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 23l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3"/></svg><span class="lbl">Đổi lớp</span></button>
+      <button id="btnOut" class="btn light" hidden title="Đăng xuất"><svg class="i" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg><span class="lbl">Đăng xuất</span></button>
+    </div>
+  </header>
+  <div id="demoBar" class="demobar" hidden>Đang ở <b>chế độ thử</b>: không cần đăng nhập, học sinh chỉ vào được từ các tab của cùng trình duyệt này. Để chạy thật trên mạng, làm theo HUONG_DAN_TRIEN_KHAI.md.</div>
+
+  <!-- ============ Đăng nhập ============ -->
+  <section id="loginView" class="gate" hidden>
+    <form id="loginForm" class="gatecard" autocomplete="on">
+      <div class="gt"><div class="logo big"><svg class="i" viewBox="0 0 24 24"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5M14 4l-4 16"/></svg></div><div><h2>Đăng nhập giáo viên</h2><p>Dùng tài khoản email đã tạo trong Firebase (xem hướng dẫn triển khai).</p></div></div>
+      <label class="field"><span>Email</span><input id="lEmail" class="inp" type="email" autocomplete="username" required></label>
+      <label class="field"><span>Mật khẩu</span><input id="lPass" class="inp" type="password" autocomplete="current-password" required></label>
+      <div id="loginErr" class="joinerr" hidden></div>
+      <button id="lGo" type="submit" class="btn primary big">Đăng nhập</button>
+    </form>
+  </section>
+
+  <!-- ============ Chọn / tạo lớp ============ -->
+  <section id="roomView" class="gate" hidden>
+    <form id="roomForm" class="gatecard" autocomplete="off">
+      <div class="gt"><div class="logo big"><svg class="i" viewBox="0 0 24 24"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6"/></svg></div><div><h2>Chọn lớp</h2><p>Mã lớp là tên ngắn không dấu (ví dụ 9a1-tin) để học sinh gõ khi vào lớp.</p></div></div>
+      <label class="field"><span>Mã lớp</span><input id="rCode" class="inp big" maxlength="32" placeholder="ví dụ: 9a1-tin" autocapitalize="off" autocorrect="off" spellcheck="false"></label>
+      <label class="field"><span>Tên hiển thị (khi tạo lớp mới)</span><input id="rTitle" class="inp" maxlength="60" placeholder="ví dụ: Lớp 9A1 – Tin học"></label>
+      <div id="roomErr" class="joinerr" hidden></div>
+      <div class="jactions"><button id="rOpen" type="submit" class="btn primary big">Mở lớp</button><button id="rNew" type="button" class="btn big">Tạo lớp mới</button></div>
+      <div id="recent" class="recent" hidden><span>Lớp đã dùng:</span><div id="recentList"></div></div>
+    </form>
+  </section>
+
+  <!-- ============ Bảng điều khiển ============ -->
+  <div id="dash" hidden>
+  <nav class="tabs">
+    <button class="tabbtn active" data-tab="live"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg><span class="lbl">Giám sát lớp</span> <span id="cntAll" class="badge">0</span></button>
+    <button class="tabbtn" data-tab="subs"><svg class="i" viewBox="0 0 24 24"><path d="M22 12h-6l-2 3h-4l-2-3H2M5.5 5h13l3.5 7v6a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-6z"/></svg><span class="lbl">Bài đã nộp</span> <span id="cntSubs" class="badge gray">0</span></button>
+    <button class="tabbtn" data-tab="share"><svg class="i" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span class="lbl">Bài tập chia sẻ</span> <span id="cntShare" class="badge gray">0</span></button>
+  </nav>
+
+  <section id="tab-live" class="tabpane active">
+    <div class="stats">
+      <div class="stat"><b id="sTotal">0</b><span>Đang kết nối</span></div>
+      <div class="stat run"><b id="sRun">0</b><span>Đang chạy</span></div>
+      <div class="stat err"><b id="sErr">0</b><span>Đang lỗi</span></div>
+      <div class="stat ok"><b id="sSub">0</b><span>Đã nộp bài</span></div>
+      <div class="stat off"><b id="sOff">0</b><span>Mất kết nối</span></div>
+      <div class="grow"></div>
+      <div class="toolbar">
+        <input id="q" class="inp" placeholder="Tìm theo tên, lớp, STT…">
+        <select id="flt" class="inp">
+          <option value="">Tất cả trạng thái</option><option value="running">Đang chạy</option><option value="error">Có lỗi</option>
+          <option value="typing">Đang gõ</option><option value="submitted">Đã nộp</option><option value="offline">Mất kết nối</option>
+        </select>
+        <button id="btnNotify" class="btn"><svg class="i" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/></svg><span class="lbl">Thông báo cả lớp</span></button>
+        <button id="btnSaveAll" class="btn primary"><svg class="i" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg><span class="lbl">Tải code cả lớp (.zip)</span></button>
+        <button id="btnClearOff" class="btn ghost" title="Xóa các học sinh đã mất kết nối khỏi danh sách"><svg class="i" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg><span class="lbl">Dọn học sinh offline</span></button>
+      </div>
+    </div>
+    <div id="grid" class="grid"></div>
+    <div id="emptyLive" class="empty-big">
+      <svg class="i" viewBox="0 0 24 24" style="width:54px;height:54px;stroke-width:1.4"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>
+      <h3>Chưa có học sinh nào vào lớp</h3>
+      <p>Gửi cho học sinh đường dẫn hoặc mã QR ở góc trên (hoặc đọc mã lớp), học sinh mở bằng máy tính hay điện thoại.</p>
+    </div>
+  </section>
+
+  <section id="tab-subs" class="tabpane">
+    <div class="panel-head">
+      <div><h2>Bài học sinh đã nộp</h2><div class="sub">Mỗi lần nộp được lưu riêng; bảng chỉ hiện bản mới nhất, các bản cũ nằm trong thư mục <code>_ban_cu</code> của file .zip.</div></div>
+      <div class="row">
+        <button id="btnZipSubs" class="btn primary"><svg class="i" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>Tải tất cả (.zip)</button>
+      </div>
+    </div>
+    <div class="table-wrap"><table class="tbl"><thead><tr><th>Tên file (STT_Họ tên_Bài số)</th><th style="width:70px">Số bản</th><th style="width:150px">Nộp lúc</th><th style="width:210px"></th></tr></thead><tbody id="subsBody"></tbody></table>
+    <div id="subsEmpty" class="empty-big small" hidden><p>Chưa có bài nào được nộp.</p></div></div>
+  </section>
+
+  <section id="tab-share" class="tabpane">
+    <div class="panel-head">
+      <div><h2>Bài tập chia sẻ cho học sinh</h2><div class="sub">Học sinh bấm nút “Bài tập của thầy cô” để tải các file này. Mỗi file tối đa <b id="maxKB">700</b> KB.</div></div>
+    </div>
+    <div id="drop" class="drop"><svg class="i" viewBox="0 0 24 24" style="width:30px;height:30px"><path d="M12 15V3M7 8l5-5 5 5M4 21h16"/></svg>
+      <div><b>Kéo thả file vào đây</b> hoặc <label class="link">chọn file<input id="upInput" type="file" multiple hidden></label> để chia sẻ cho học sinh</div></div>
+    <div class="table-wrap"><table class="tbl"><thead><tr><th>Tên file</th><th style="width:110px">Dung lượng</th><th style="width:150px">Thêm lúc</th><th style="width:150px"></th></tr></thead><tbody id="shareBody"></tbody></table>
+    <div id="shareEmpty" class="empty-big small" hidden><p>Chưa có file nào được chia sẻ.</p></div></div>
+  </section>
+  </div>
+</div>
+
+<!-- ================== CỬA SỔ CHI TIẾT HỌC SINH ================== -->
+<div id="modal" class="modal" hidden>
+  <div class="dlg">
+    <div class="dlg-head">
+      <div class="who"><span id="mMay" class="may">00</span><div><div id="mName" class="nm"></div><div id="mSub" class="sb"></div></div></div>
+      <span id="mStatus" class="st"></span>
+      <div class="grow"></div>
+      <label class="switch" title="Khóa máy học sinh và cho phép giáo viên sửa code trực tiếp"><input id="mEdit" type="checkbox"><span class="slider"></span><b>Sửa code học sinh</b></label>
+      <button id="mRun" class="btn run" title="Chạy code này trên máy học sinh để cả hai cùng xem (Ctrl+Enter)"><svg class="i" viewBox="0 0 24 24" style="fill:currentColor"><path d="M7 4l13 8-13 8z"/></svg><span>Chạy</span></button>
+      <button id="mStop" class="btn stop" title="Dừng chương trình đang chạy trên máy học sinh"><svg class="i" viewBox="0 0 24 24" style="fill:currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg><span class="lbl">Dừng</span></button>
+      <button id="mOpen" class="btn" title="Mở file Python (.py) từ máy giáo viên vào khung code của học sinh này"><svg class="i" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span class="lbl">Mở file .py</span></button>
+      <input id="mFile" type="file" accept=".py,.txt,text/x-python,text/plain" hidden>
+      <button id="mSave" class="btn" title="Tải code của học sinh này về máy (.py)"><svg class="i" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg><span class="lbl">Tải bài này</span></button>
+      <button id="mNotify" class="btn"><svg class="i" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span class="lbl">Nhắn học sinh</span></button>
+      <button id="mClose" class="btn ghost" title="Đóng (Esc)"><svg class="i" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div id="mBanner" class="banner" hidden>Chế độ sửa: máy học sinh đang bị khóa, mọi thay đổi của thầy cô hiện ngay trên màn hình của em.</div>
+    <div class="dlg-body">
+      <div class="dpane"><div class="dp-h">Code</div><div class="dp-b"><textarea id="mCode"></textarea></div></div>
+      <div class="dpane"><div class="dp-h">Kết quả học sinh chạy</div><div id="mOut" class="console"></div>
+        <div id="mInRow" class="inrow" hidden><span>Học sinh đang chờ nhập dữ liệu — thầy cô có thể gõ thay:</span><input id="mIn" class="inp" autocomplete="off" placeholder="Gõ rồi nhấn Enter"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- xem bài nộp -->
+<div id="viewDlg" class="modal" hidden>
+  <div class="dlg small">
+    <div class="dlg-head"><div><div id="vTitle" class="nm"></div><div id="vSub" class="sb"></div></div><div class="grow"></div>
+      <select id="vVer" class="inp" style="width:auto;max-width:220px"></select>
+      <button id="vDown" class="btn"><svg class="i" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg><span class="lbl">Tải .py</span></button>
+      <button id="vClose" class="btn ghost"><svg class="i" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>
+    <div class="dlg-body one"><div class="dpane"><div class="dp-b"><textarea id="vCode"></textarea></div></div></div>
+  </div>
+</div>
+
+<!-- mã QR -->
+<div id="qrDlg" class="modal" hidden>
+  <div class="qrcard"><h3>Mã QR vào lớp</h3><div id="qrBox"></div><div id="qrUrl" class="mono"></div><p>Học sinh quét bằng camera điện thoại để vào lớp.</p><button id="qrClose" class="btn">Đóng</button></div>
+</div>
+
+<footer class="credit-bar">Design By: Nguyễn Hữu Phúc - THCS Lê Thánh Tông - ZL: 0373.022.325</footer>
+<div id="toasts"></div>
+
+<script src="config.js"></script>
+<script src="vendor/codemirror/codemirror.js"></script>
+<script src="vendor/codemirror/python.js"></script>
+<script src="vendor/codemirror/closebrackets.js"></script>
+<script src="vendor/codemirror/matchbrackets.js"></script>
+<script src="vendor/codemirror/active-line.js"></script>
+<script src="vendor/codemirror/comment.js"></script>
+<script src="vendor/qrcode.js"></script>
+<script>if (window.PYLAB_CONFIG && PYLAB_CONFIG.backend === 'firebase') { ['app', 'auth', 'database'].forEach(function (n) { document.write('<script src="vendor/firebase/firebase-' + n + '-compat.js"><\/script>'); }); }</script>
+<script src="assets/js/util.js"></script>
+<script src="assets/js/db-local.js"></script>
+<script src="assets/js/db-firebase.js"></script>
+<script src="assets/js/hub.js"></script>
+<script src="assets/js/teacher.js"></script>
+</body>
+</html>

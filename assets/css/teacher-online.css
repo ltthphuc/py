@@ -1,0 +1,51 @@
+/* ===== Giáo viên - bản online ===== */
+.mono { font-family: var(--mono); }
+.chip { display: inline-flex; align-items: center; gap: 8px; height: 32px; padding: 0 6px 0 12px; border-radius: 99px; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.22); color: #fde68a; font-weight: 700; font-size: 13.5px; max-width: 100%; }
+.chip.roomchip { padding-right: 14px; color: #fff; }
+.chip.roomchip .i { color: #fbbf24; }
+.chip .mono { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 34vw; }
+.chip button { height: 22px; border: 0; border-radius: 99px; padding: 0 10px; background: rgba(255,255,255,.18); color: #fff; font-weight: 600; font-size: 11.5px; cursor: pointer; }
+.chip button:hover { background: rgba(255,255,255,.3); }
+.urlbox { gap: 8px; }
+
+.gate { min-height: calc(100vh - 140px); display: grid; place-items: center; padding: 24px 16px; }
+.gatecard { background: #fff; border-radius: 18px; padding: 26px; width: min(520px, 100%); display: flex; flex-direction: column; gap: 14px; box-shadow: 0 16px 50px rgba(15,39,66,.16); border: 1px solid var(--line); }
+.gatecard .gt { display: flex; gap: 14px; align-items: center; }
+.gatecard h2 { margin: 0 0 2px; font-size: 22px; } .gatecard p { margin: 0; color: var(--muted); font-size: 13.5px; }
+.gatecard .inp { width: 100%; }
+.logo.big { background: linear-gradient(135deg, #f59e0b, #dc6b2f); }
+.recent { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; color: var(--muted); font-size: 13px; }
+#recentList { display: flex; gap: 6px; flex-wrap: wrap; }
+.rchip { border: 1px solid var(--line); background: #f8fafc; border-radius: 99px; padding: 4px 12px; font: 600 13px var(--mono); cursor: pointer; }
+.rchip:hover { background: var(--blue-l); border-color: var(--blue); }
+
+.acts { white-space: nowrap; text-align: right; }
+.dlg.small { width: min(980px, 100%); height: min(720px, 100%); }
+.dlg-body.one { grid-template-columns: 1fr; }
+.qrcard { background: #fff; border-radius: 18px; padding: 22px; width: min(360px, 92vw); text-align: center; display: flex; flex-direction: column; gap: 10px; align-items: center; box-shadow: 0 24px 70px rgba(0,0,0,.4); }
+.qrcard h3 { margin: 0; } .qrcard p { margin: 0; color: var(--muted); font-size: 13px; }
+#qrBox { width: 260px; max-width: 80vw; } #qrBox svg { width: 100%; height: auto; }
+#qrUrl { font-size: 12px; word-break: break-all; color: #475569; }
+#qrDlg { display: grid; } #qrDlg[hidden] { display: none; }
+
+@media (max-width: 1000px) { .urlbox { display: flex; } }
+@media (max-width: 820px) {
+  .tabs { padding: 0 6px; overflow-x: auto; top: 50px; } .tabbtn { padding: 0 12px; flex: none; } .tabbtn .lbl { display: inline; }
+  .tabpane { padding: 12px 10px 24px; }
+  .urlbox { order: 3; flex: 1 1 100%; justify-content: flex-start; flex-wrap: wrap; } .topbar { flex-wrap: wrap; gap: 8px 10px; position: static; }
+  .tabs { position: static; }
+  .stats { gap: 8px; } .stat { min-width: 0; flex: 1 1 28%; padding: 8px 10px; } .stat b { font-size: 20px; }
+  .toolbar { width: 100%; } .toolbar .inp, .toolbar select.inp { flex: 1 1 100%; width: 100%; }
+  .toolbar .btn { flex: 1; justify-content: center; } .toolbar .lbl { display: inline; }
+  .grid { grid-template-columns: 1fr; }
+  .modal { padding: 0; } .dlg { height: 100%; border-radius: 0; } .dlg.small { height: 100%; }
+  .dlg-head { padding: 8px 10px; gap: 8px; } .dlg-head .lbl { display: none; } .dlg-head .btn { padding: 0 12px; }
+  .dlg-body { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; } .dlg-body.one { grid-template-rows: 1fr; }
+  .dpane + .dpane { border-left: 0; border-top: 1px solid var(--line); }
+  .tbl th:nth-child(3), .tbl td:nth-child(3) { display: none; }
+  .tbl .btn.small { height: 32px; } .acts { white-space: normal; }
+  .switch b { font-size: 13px; }
+  .panel-head { gap: 8px; } .panel-head h2 { font-size: 18px; }
+  .gate { min-height: 60vh; padding: 12px; } .gatecard { padding: 18px; }
+  .credit-bar { font-size: 11px; }
+}

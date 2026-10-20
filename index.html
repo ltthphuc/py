@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f2742">
+<title>Python Lab Online</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232563eb'/%3E%3Cpath d='M10 11l-4 5 4 5M22 11l4 5-4 5M18 9l-4 14' stroke='white' stroke-width='2.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/css/app.css">
+<style>
+  body { background: linear-gradient(160deg, #0b1f36 0%, #12304f 45%, #1b4a6e 100%); min-height: 100vh; color: #fff; }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 36px 20px 30px; }
+  .hero { text-align: center; padding: 26px 0 10px; }
+  .logo { width: 68px; height: 68px; border-radius: 18px; margin: 0 auto 16px; display: grid; place-items: center; background: linear-gradient(135deg, #3b82f6, #2563eb); box-shadow: 0 8px 30px rgba(37,99,235,.55); }
+  .logo .i { width: 34px; height: 34px; }
+  h1 { font-size: clamp(30px, 6vw, 46px); margin: 0 0 6px; letter-spacing: .3px; }
+  h1 span { font-size: .35em; vertical-align: middle; letter-spacing: .12em; padding: 4px 10px; border-radius: 99px; background: #22c55e; color: #052e16; margin-left: 8px; }
+  .lead { color: #bcd0e8; font-size: clamp(15px, 2.6vw, 18px); max-width: 640px; margin: 0 auto; line-height: 1.55; }
+  .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin: 34px 0 22px; }
+  .cardx { display: flex; flex-direction: column; gap: 10px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.18); border-radius: 20px; padding: 24px; text-decoration: none; color: #fff; transition: transform .15s, background .15s, border-color .15s; }
+  .cardx:hover { transform: translateY(-3px); background: rgba(255,255,255,.14); border-color: rgba(255,255,255,.4); }
+  .cardx .ic { width: 54px; height: 54px; border-radius: 14px; display: grid; place-items: center; }
+  .cardx .ic .i { width: 28px; height: 28px; }
+  .cardx.s .ic { background: linear-gradient(135deg, #3b82f6, #2563eb); } .cardx.t .ic { background: linear-gradient(135deg, #f59e0b, #dc6b2f); }
+  .cardx h2 { margin: 6px 0 0; font-size: 24px; } .cardx p { margin: 0; color: #bcd0e8; line-height: 1.5; }
+  .cardx .go { margin-top: auto; font-weight: 700; color: #fde68a; }
+  .modebox { text-align: center; margin: 4px 0 26px; }
+  .mode { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 99px; font-weight: 700; font-size: 13.5px; background: rgba(255,255,255,.1); }
+  .mode .dot { width: 9px; height: 9px; border-radius: 50%; background: #4ade80; } .mode.demo .dot { background: #fbbf24; }
+  .feat { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; margin-top: 8px; }
+  .feat div { background: rgba(255,255,255,.06); border-radius: 14px; padding: 14px 16px; color: #d5e3f5; font-size: 14px; line-height: 1.5; }
+  .feat b { display: block; color: #fff; margin-bottom: 3px; }
+  footer { text-align: center; color: #8fb0d6; font-size: 13px; margin-top: 34px; }
+  @media (max-width: 640px) { .cards { grid-template-columns: 1fr; } .wrap { padding-top: 18px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <div class="logo"><svg class="i" viewBox="0 0 24 24"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5M14 4l-4 16"/></svg></div>
+    <h1>Python Lab<span>ONLINE</span></h1>
+    <p class="lead">Viết và chạy Python ngay trên trình duyệt, ở lớp hay ở nhà, bằng máy tính hoặc điện thoại. Giáo viên xem trực tiếp bài làm của cả lớp, sửa hộ, chạy hộ và thu bài.</p>
+  </div>
+  <div class="modebox"><span id="mode" class="mode"><span class="dot"></span><span id="modeTxt"></span></span></div>
+  <div class="cards">
+    <a class="cardx s" href="hocsinh.html" id="goS">
+      <div class="ic"><svg class="i" viewBox="0 0 24 24"><path d="M22 10L12 5 2 10l10 5 10-5zM6 12v5c3 2 9 2 12 0v-5"/></svg></div>
+      <h2>Tôi là học sinh</h2><p>Nhập mã lớp thầy/cô cho, viết code Python, chạy thử và nộp bài.</p><span class="go">Vào lớp →</span>
+    </a>
+    <a class="cardx t" href="giaovien.html">
+      <div class="ic"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg></div>
+      <h2>Tôi là giáo viên</h2><p>Tạo lớp, xem bài làm trực tiếp, sửa code, chạy hộ, thu bài và chia sẻ bài tập.</p><span class="go">Mở bảng điều khiển →</span>
+    </a>
+  </div>
+  <div class="feat">
+    <div><b>Chạy Python thật</b>Python 3.13, thông báo lỗi giống Python cài trên máy, kèm gợi ý tiếng Việt.</div>
+    <div><b>Máy tính và điện thoại</b>Giao diện tự co giãn, có thanh phím ký tự nhanh cho điện thoại.</div>
+    <div><b>Xem trực tiếp</b>Giáo viên thấy code và kết quả của từng học sinh theo thời gian thực.</div>
+    <div><b>Đủ thư viện</b>turtle, numpy, pandas, matplotlib, scipy, sympy, openpyxl, sqlite3…</div>
+  </div>
+  <footer>Design By: Nguyễn Hữu Phúc - THCS Lê Thánh Tông - ZL: 0373.022.325</footer>
+</div>
+<script src="config.js"></script>
+<script>
+  var online = window.PYLAB_CONFIG && PYLAB_CONFIG.backend === 'firebase';
+  var m = document.getElementById('mode');
+  m.className = 'mode' + (online ? '' : ' demo');
+  document.getElementById('modeTxt').textContent = online ? 'Đang chạy thật trên mạng' : 'Chế độ thử (chỉ trong một trình duyệt)';
+  var q = location.search; if (q) document.getElementById('goS').href = 'hocsinh.html' + q;
+</script>
+</body>
+</html>
