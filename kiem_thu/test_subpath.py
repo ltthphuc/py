@@ -8,11 +8,12 @@ import aiohttp
 ROOT = Path(__file__).resolve().parent.parent
 CHROME = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
 HP, CP = 8766, 9445
-URL = f"http://127.0.0.1:{HP}/{ROOT.name}/hocsinh.html"
+LIVE = sys.argv[1] if len(sys.argv) > 1 else None   # ví dụ: python kiem_thu/test_subpath.py https://user.github.io/repo/hocsinh.html
+URL = LIVE or f"http://127.0.0.1:{HP}/{ROOT.name}/hocsinh.html"
 
 
 async def main():
-    srv = subprocess.Popen([sys.executable, "-m", "http.server", str(HP), "--bind", "127.0.0.1"], cwd=str(ROOT.parent), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    srv = None if LIVE else subprocess.Popen([sys.executable, "-m", "http.server", str(HP), "--bind", "127.0.0.1"], cwd=str(ROOT.parent), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     ch = subprocess.Popen([CHROME, "--headless=new", f"--remote-debugging-port={CP}", f"--user-data-dir={tempfile.mkdtemp(prefix='pl_sub_')}", "--no-first-run", "--disable-gpu", "about:blank"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     ok = True
     try:
@@ -58,7 +59,8 @@ async def main():
             print(("PASS" if c else "FAIL"), "thư mục con: input() trả đúng giá trị")
             ok = a and b and c
     finally:
-        ch.terminate(); srv.terminate()
+        ch.terminate()
+        if srv: srv.terminate()
     sys.exit(0 if ok else 1)
 
 
