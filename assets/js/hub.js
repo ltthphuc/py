@@ -31,6 +31,23 @@
   };
 
   /* ===================================================================== HỌC SINH */
+  /* File chia sẻ lớn được cắt thành nhiều đoạn (mỗi đoạn ~700 KB gốc) lưu ở filedata/<id>/c0, c1…; file cũ (1 chuỗi) vẫn đọc được. */
+  const FILE_CHUNK = 700 * 1024;
+  async function readFileBlob(db, base, f, onProgress) {
+    const parts = [];
+    if (f.chunks) {
+      for (let k = 0; k < f.chunks; k++) {
+        const b64 = await db.get(base + '/filedata/' + f.id + '/c' + k);
+        if (typeof b64 !== 'string') throw new Error('thiếu đoạn ' + (k + 1) + '/' + f.chunks);
+        parts.push(U.b64ToBytes(b64)); if (onProgress) onProgress((k + 1) / f.chunks);
+      }
+    } else {
+      const b64 = await db.get(base + '/filedata/' + f.id);
+      if (typeof b64 !== 'string') throw new Error('file trống');
+      parts.push(U.b64ToBytes(b64));
+    }
+    return new Blob(parts);
+  }
   class StudentConn {
     constructor(db, room) { this.db = db; this.room = room; this.b = base(room); this.uid = null; this.offs = []; this.connState = undefined; this._conn = null; }
 
@@ -68,7 +85,7 @@
         fn(Object.keys(v || {}).map((id) => Object.assign({ id }, v[id])).sort((a, c) => (a.ts || 0) - (c.ts || 0)));
       }));
     }
-    fileData(id) { return this.db.get(this.b + '/filedata/' + id); }
+    fileBlob(f, onProgress) { return readFileBlob(this.db, this.b, f, onProgress); }
     async submit(sub) {
       const db = this.db, file = U.fileNameFor(sub);
       const key = await db.push(this.b + '/subs/' + this.uid, { may: sub.may, name: sub.name, lop: sub.lop, bai: sub.bai, code: sub.code, ts: db.serverTime(), dev: U.isMobile() ? 'mobile' : 'desktop' });
@@ -143,14 +160,23 @@
       return Promise.all(['students', 'ctl', 'cmd'].map((n) => this.db.remove(this.b + '/' + n + '/' + sid)));
     }
     async notifyMany(ids, text) { for (const id of ids) await this.cmd(id, { t: 'notify', text }); }
-    async addFile(name, b64, size) {
-      const id = U.rid();
-      await this.db.set(this.b + '/filedata/' + id, b64);
-      await this.db.set(this.b + '/files/' + id, { name, size, ts: this.db.serverTime() });
+    async addFile(file, onProgress) {
+      const id = U.rid(), n = Math.max(1, Math.ceil(file.size / FILE_CHUNK));
+      const put = async (k) => {
+        const b64 = U.bufToB64(await file.slice(k * FILE_CHUNK, (k + 1) * FILE_CHUNK).arrayBuffer());
+        await this.db.set(this.b + '/filedata/' + id + '/c' + k, b64);
+      };
+      try {
+        let done = 0;
+        for (let k = 0; k < n; k += 3) {
+          await Promise.all([k, k + 1, k + 2].filter((x) => x < n).map(async (x) => { await put(x); done++; if (onProgress) onProgress(done / n); }));
+        }
+        await this.db.set(this.b + '/files/' + id, { name: file.name, size: file.size, chunks: n, ts: this.db.serverTime() });
+      } catch (e) { this.db.remove(this.b + '/filedata/' + id).catch(() => {}); throw e; }
       return id;
     }
     delFile(id) { return Promise.all([this.db.remove(this.b + '/files/' + id), this.db.remove(this.b + '/filedata/' + id)]); }
-    fileData(id) { return this.db.get(this.b + '/filedata/' + id); }
+    fileBlob(f, onProgress) { return readFileBlob(this.db, this.b, f, onProgress); }
     deleteSub(uid, key) { return this.db.remove(this.b + '/subs/' + uid + '/' + key); }
     close() { this.offs.forEach((f) => { try { f(); } catch (e) { /* bỏ qua */ } }); this.offs = []; }
   }

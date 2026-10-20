@@ -512,7 +512,7 @@ function renderFiles(list) {
     a.innerHTML = '<span class="fi"><svg class="i" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg></span><span class="fn"></span><span class="fm"></span>';
     a.querySelector('.fn').textContent = f.name; a.querySelector('.fm').textContent = fmtSize(f.size || 0);
     a.onclick = async () => {
-      try { const b64 = await conn.fileData(f.id); if (!b64) throw new Error('file trống'); download(f.name, new Blob([b64ToBytes(b64)])); }
+      try { const fm = a.querySelector('.fm'), sz = fmtSize(f.size || 0); const blob = await conn.fileBlob(f, (r) => { fm.textContent = Math.round(r * 100) + '%'; }); fm.textContent = sz; download(f.name, blob); }
       catch (e) { toast('Không tải được file: ' + (e.message || ''), 'err'); }
     };
     box.appendChild(a);

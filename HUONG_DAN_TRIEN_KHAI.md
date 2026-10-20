@@ -71,7 +71,7 @@ window.PYLAB_CONFIG = {
     projectId: '…',
     appId: '…'
   },
-  maxFileKB: 700
+  maxFileKB: 204800
 };
 ```
 
@@ -158,7 +158,7 @@ Tên miền riêng phải **mua** ở nhà cung cấp (tên miền .vn khoảng 
 |---|---|---|
 | Kết nối đồng thời Realtime Database (Spark) | **100** | Tổng số học sinh + giáo viên đang mở trang cùng lúc. Một lớp 40–45 em dư sức; nếu nhiều lớp học cùng lúc cần nâng lên gói Blaze (trả theo mức dùng, thường rất rẻ). |
 | Tạo tài khoản ẩn danh | khoảng 100 lần/giờ/địa chỉ IP | Cả lớp ở cùng mạng trường chỉ tính khoảng 40 lần. Học sinh vào lại bằng cùng trình duyệt không tạo tài khoản mới. |
-| Dung lượng, lưu lượng | 1 GB lưu trữ, 10 GB tải/tháng | Rất dư cho code văn bản. Mỗi file chia sẻ tối đa 700 KB (đổi ở `maxFileKB`). |
+| Dung lượng, lưu lượng | 1 GB lưu trữ, 10 GB tải/tháng | Rất dư cho code văn bản. Mỗi file chia sẻ tối đa 200 MB (đổi ở `maxFileKB`), file lớn được cắt thành các đoạn ~700 KB; lưu ý 1 GB lưu trữ chung nên file 100 MB chỉ chứa được vài file. |
 | Dung lượng tải ban đầu của học sinh | khoảng 12 MB lần đầu | Trình duyệt lưu lại nên các lần sau rất nhanh. Thư viện nặng (pandas, scipy…) chỉ tải khi học sinh `import`. |
 
 Dọn dữ liệu: trong Firebase Console → Realtime Database → Data, xóa nhánh `rooms/<mã lớp>` khi kết thúc học kỳ.
@@ -184,7 +184,7 @@ Dọn dữ liệu: trong Firebase Console → Realtime Database → Data, xóa n
 | Học sinh ở nhà, dùng điện thoại | Không | **Có** |
 | Giáo viên xem ở nhà / bằng điện thoại | Không | **Có** |
 | Bài nộp | Lưu thành file trong thư mục `bai_nop` trên máy giáo viên | Lưu trong Firebase; giáo viên **tải từng bài hoặc cả lớp .zip** |
-| Chia sẻ bài tập | Thư mục trên máy giáo viên | Tải file lên trang giáo viên (mỗi file ≤ 700 KB) |
+| Chia sẻ bài tập | Thư mục trên máy giáo viên | Tải file lên trang giáo viên (mỗi file ≤ 200 MB) |
 | Mở tường lửa | Cần (nút Mở tường lửa) | Không cần |
 | Số học sinh đồng thời | Theo mạng LAN | Tối đa khoảng 100 với gói miễn phí |
 

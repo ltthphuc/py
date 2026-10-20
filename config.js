@@ -18,5 +18,5 @@ window.PYLAB_CONFIG = {
     appId: '1:102251803685:web:d2d6ffa09242810a607bcc'
   },
 
-  maxFileKB: 700   // dung lượng tối đa mỗi file giáo viên chia sẻ cho học sinh
+  maxFileKB: 204800   // dung lượng tối đa mỗi file giáo viên chia sẻ cho học sinh
 };

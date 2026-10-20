@@ -124,12 +124,16 @@
 
     /* chia sẻ file */
     let sfiles = []; S.onFiles((l) => { sfiles = l; });
-    const id = await T.addFile('De bai.py', btoa('print("de")'), 11);
+    const id = await T.addFile(new File(['print("de")'], 'De bai.py'));
     ok('Giáo viên thấy file đã chia sẻ', await until(() => tfiles.length === 1 && tfiles[0].name === 'De bai.py'));
     ok('Học sinh thấy danh sách file', await until(() => sfiles.length === 1 && sfiles[0].name === 'De bai.py'));
-    ok('Học sinh tải được nội dung file', atob(await S.fileData(id)) === 'print("de")');
-    await T.delFile(id);
-    ok('Xóa file xóa cả nội dung', await until(() => sfiles.length === 0) && (await dbS.get('rooms/lop1/filedata/' + id)) === null);
+    ok('Học sinh tải được nội dung file', (await (await S.fileBlob({ id, chunks: 1 })).text()) === 'print("de")');
+    const big = new Uint8Array(2 * 1024 * 1024 + 5).map((_, i) => i % 251);
+    const bid = await T.addFile(new File([big], 'lon.bin'));
+    const back = new Uint8Array(await (await S.fileBlob({ id: bid, chunks: 3 })).arrayBuffer());
+    ok('File 2MB cắt đoạn rồi ghép lại đúng', back.length === big.length && back[1000000] === big[1000000] && back[back.length - 1] === big[big.length - 1]);
+    await T.delFile(id); await T.delFile(bid);
+    ok('Xóa file xóa cả nội dung', await until(() => sfiles.length === 0) && (await dbS.get('rooms/lop1/filedata/' + id)) === null && (await dbS.get('rooms/lop1/filedata/' + bid + '/c0')) === null);
 
     /* thư mục lớp (học sinh chọn lớp) */
     ok('Mở lớp tự đăng ký vào danh sách lớp chung', (await dbT.get('classes/lop1')) && (await dbT.get('classes/lop1')).title === 'Lớp 9A1');

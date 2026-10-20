@@ -254,7 +254,7 @@ function onSubs(list) {
 }
 
 /* ---------------------------------------------------------------- bài tập chia sẻ */
-const maxKB = cfg.maxFileKB || 700; $('maxKB').textContent = maxKB;
+const maxKB = cfg.maxFileKB || 700; $('maxKB').textContent = maxKB >= 1024 ? Math.round(maxKB / 1024) + ' MB' : maxKB + ' KB';
 function renderFiles(list) {
   filesList = list;
   const body = $('shareBody'); body.textContent = '';
@@ -263,7 +263,7 @@ function renderFiles(list) {
     const tr = document.createElement('tr');
     tr.innerHTML = '<td><div class="fname">' + ICON_FILE + '<span></span></div></td><td></td><td></td><td class="acts"><button class="btn small d">Tải về</button> <button class="btn small danger x">Xóa</button></td>';
     tr.querySelector('span').textContent = f.name; tr.children[1].textContent = fmtSize(f.size || 0); tr.children[2].textContent = fmtTime(f.ts);
-    tr.querySelector('.d').onclick = async () => { const b64 = await T.fileData(f.id); if (b64) download(f.name, new Blob([b64ToBytes(b64)])); };
+    tr.querySelector('.d').onclick = async () => { try { download(f.name, await T.fileBlob(f, (r) => toast('Đang tải ' + Math.round(r * 100) + '%', 'ok', 900))); } catch (e) { toast('Không tải được: ' + errText(e), 'err'); } };
     tr.querySelector('.x').onclick = async () => { if (confirm('Xóa file “' + f.name + '” khỏi danh sách chia sẻ?')) { await T.delFile(f.id); toast('Đã xóa', 'ok'); } };
     body.appendChild(tr);
   }
@@ -272,8 +272,8 @@ async function upload(files) {
   if (!files.length || !T) return;
   let n = 0;
   for (const f of files) {
-    if (f.size > maxKB * 1024) { toast('“' + f.name + '” lớn hơn ' + maxKB + ' KB nên không chia sẻ được.', 'err', 6000); continue; }
-    try { await T.addFile(f.name, bufToB64(await f.arrayBuffer()), f.size); n++; } catch (e) { toast('Không tải lên được “' + f.name + '”: ' + errText(e), 'err'); }
+    if (f.size > maxKB * 1024) { toast('“' + f.name + '” lớn hơn ' + $('maxKB').textContent + ' nên không chia sẻ được.', 'err', 6000); continue; }
+    try { await T.addFile(f, (r) => toast('Đang tải lên “' + f.name + '” ' + Math.round(r * 100) + '%', 'ok', 1500)); n++; } catch (e) { toast('Không tải lên được “' + f.name + '”: ' + errText(e), 'err'); }
   }
   if (n) toast('Đã chia sẻ ' + n + ' file', 'ok');
 }
