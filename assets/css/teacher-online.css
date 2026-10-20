@@ -49,3 +49,9 @@
   .gate { min-height: 60vh; padding: 12px; } .gatecard { padding: 18px; }
   .credit-bar { font-size: 11px; }
 }
+
+.loginlinks { display: flex; gap: 8px; justify-content: center; align-items: center; flex-wrap: wrap; font-size: 13px; color: var(--muted); }
+.loginlinks a, .linkbtn { color: var(--blue); font: inherit; font-weight: 600; text-decoration: none; background: none; border: 0; padding: 0; cursor: pointer; }
+.loginlinks a:hover, .linkbtn:hover { text-decoration: underline; }
+.gatecard .jactions .btn { flex: 1; justify-content: center; }
+.okmsg { padding: 10px 14px; background: var(--green-l); color: var(--green-d); border-radius: 8px; font-weight: 600; }

@@ -58,7 +58,7 @@
     <div><b>Xem trực tiếp</b>Giáo viên thấy code và kết quả của từng học sinh theo thời gian thực.</div>
     <div><b>Đủ thư viện</b>turtle, numpy, pandas, matplotlib, scipy, sympy, openpyxl, sqlite3…</div>
   </div>
-  <footer>Design By: Nguyễn Hữu Phúc - THCS Lê Thánh Tông - ZL: 0373.022.325</footer>
+  <footer><a href="kiemtra.html" style="color:#fde68a">Kiểm tra cấu hình</a> &nbsp;·&nbsp; Design By: Nguyễn Hữu Phúc - THCS Lê Thánh Tông - ZL: 0373.022.325</footer>
 </div>
 <script src="config.js"></script>
 <script>
@@ -66,6 +66,7 @@
   var m = document.getElementById('mode');
   m.className = 'mode' + (online ? '' : ' demo');
   document.getElementById('modeTxt').textContent = online ? 'Đang chạy thật trên mạng' : 'Chế độ thử (chỉ trong một trình duyệt)';
+  if (location.protocol === 'file:') { document.getElementById('modeTxt').textContent = 'Hãy mở qua địa chỉ web (không bấm đúp file)'; m.className = 'mode demo'; }
   var q = location.search; if (q) document.getElementById('goS').href = 'hocsinh.html' + q;
 </script>
 </body>

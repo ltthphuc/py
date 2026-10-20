@@ -13,6 +13,12 @@ const errText = (e) => {
   if (/PERMISSION_DENIED|permission/i.test(m)) return 'Tài khoản này chưa có quyền giáo viên. Hãy thêm UID của tài khoản vào mục teachers trong Realtime Database (xem HUONG_DAN_TRIEN_KHAI.md).';
   if (/wrong-password|invalid-credential|invalid-login|user-not-found|INVALID_PASSWORD/i.test(m)) return 'Email hoặc mật khẩu chưa đúng.';
   if (/network/i.test(m)) return 'Không kết nối được mạng. Hãy kiểm tra internet.';
+  if (/email-already-in-use/.test(m)) return 'Email này đã có tài khoản, hãy bấm Đăng nhập.';
+  if (/weak-password/.test(m)) return 'Mật khẩu cần ít nhất 6 ký tự.';
+  if (/invalid-email/.test(m)) return 'Email chưa đúng dạng (ví dụ ten@truong.edu.vn).';
+  if (/too-many-requests/.test(m)) return 'Đăng nhập sai quá nhiều lần, hãy chờ vài phút rồi thử lại.';
+  if (/operation-not-allowed|admin-restricted/.test(m)) return 'Chưa bật Email/Password (hoặc Anonymous) trong Firebase → Authentication → Sign-in method.';
+  if (/api-key-not-valid|invalid-api-key/.test(m)) return 'apiKey trong config.js chưa đúng. Hãy chép lại từ Firebase.';
   return (e && e.message) || String(e);
 };
 
@@ -282,7 +288,7 @@ drop.addEventListener('drop', (e) => upload([...e.dataTransfer.files]));
 function show(view) {
   for (const id of ['loginView', 'roomView', 'dash']) $(id).hidden = id !== view;
   $('roomBox').hidden = view !== 'dash'; $('btnRoom').hidden = view !== 'dash';
-  $('btnOut').hidden = Hub.isDemo() || view === 'loginView';
+  $('btnOut').hidden = view === 'loginView';
 }
 function conn(ok, t) { $('conn').className = 'pill ' + (ok ? 'ok' : 'bad'); $('connTxt').textContent = t; }
 const rooms = () => { try { return JSON.parse(LS.get('pt_rooms', '[]')); } catch (e) { return []; } };
@@ -320,12 +326,25 @@ $('rNew').onclick = async () => {
   catch (er) { showRoomPicker(errText(er)); }
 };
 $('btnRoom').onclick = () => { if (T) { T.close(); T = null; } showRoomPicker(''); };
+const demoLogin = () => Hub.isDemo();
 $('loginForm').addEventListener('submit', async (e) => {
   e.preventDefault(); const er = $('loginErr'); er.hidden = true; const b = $('lGo'); b.disabled = true;
   try { await db.signInTeacher($('lEmail').value.trim(), $('lPass').value); afterLogin(); }
   catch (err) { er.textContent = errText(err); er.hidden = false; }
   b.disabled = false;
 });
+$('lSignup').onclick = async () => {
+  const er = $('loginErr'); er.hidden = true; const b = $('lSignup'); b.disabled = true;
+  try { await db.signUpTeacher($('lEmail').value.trim(), $('lPass').value); toast('Đã tạo tài khoản giáo viên (lưu trong trình duyệt này).', 'ok'); afterLogin(); }
+  catch (err) { er.textContent = errText(err); er.hidden = false; }
+  b.disabled = false;
+};
+$('lReset').onclick = async () => {
+  const er = $('loginErr'); const email = $('lEmail').value.trim();
+  if (!email) { er.className = 'joinerr'; er.textContent = 'Hãy nhập email vào ô Email trước, rồi bấm “Quên mật khẩu?”.'; er.hidden = false; return; }
+  try { await db.resetPassword(email); er.className = 'okmsg'; er.textContent = 'Đã gửi email đặt lại mật khẩu tới ' + email + ' (xem cả thư rác).'; er.hidden = false; }
+  catch (err) { er.className = 'joinerr'; er.textContent = errText(err); er.hidden = false; }
+};
 $('btnOut').onclick = async () => { if (T) { T.close(); T = null; } await db.signOut(); show('loginView'); conn(false, 'Chưa đăng nhập'); };
 async function afterLogin() {
   const last = LS.get('pt_room', '');
@@ -348,12 +367,16 @@ $('qrDlg').addEventListener('mousedown', (e) => { if (e.target === $('qrDlg')) $
 
 /* ---------------------------------------------------------------- khởi động */
 (async () => {
-  if (Hub.isDemo()) $('demoBar').hidden = false;
+  if (U.guardFile()) return;
+  U.demoBar($('demoBar'), Hub.isDemo());
+  if (Hub.isDemo()) {
+    $('lSignup').hidden = false; $('lReset').hidden = true;
+    $('loginNote').textContent = 'Chế độ thử: tài khoản chỉ lưu trong trình duyệt này. Lần đầu hãy bấm “Tạo tài khoản”.';
+  } else $('loginNote').textContent = 'Dùng tài khoản email giáo viên đã được cấp quyền (xem hướng dẫn triển khai). Học sinh không cần đăng nhập.';
   try {
     db = Hub.createDB();
     if (db.onError) db.onError((e) => toast(errText(e), 'err', 7000));
     db.onConnection((ok) => conn(ok, ok ? 'Đã kết nối' : 'Mất kết nối – đang thử lại…'));
-    if (Hub.isDemo()) { await db.signInTeacher(); await afterLogin(); return; }
     const uid = await db.restoreTeacher();
     if (uid) await afterLogin(); else show('loginView');
   } catch (e) { show('loginView'); const er = $('loginErr'); er.textContent = errText(e); er.hidden = false; }

@@ -135,6 +135,15 @@ Tên miền riêng phải **mua** ở nhà cung cấp (tên miền .vn khoảng 
 3. Trên điện thoại có thanh phím ký tự nhanh (Tab, `:`, `( )`, `[ ]`, `" '`…) phía dưới khung code.
 4. Muốn tự luyện không cần giáo viên: bấm **Luyện tập một mình**.
 
+## 5b. Đăng nhập giáo viên
+
+- **Học sinh vào tự do**, không cần tài khoản: chỉ cần mã lớp.
+- **Giáo viên bắt buộc đăng nhập** ở trang `…/gv` (có nút Quên mật khẩu).
+  - **Chạy thật (Firebase):** tài khoản email do bạn tạo ở bước 3. Chỉ UID có trong mục `teachers` mới xem được cả lớp; học sinh dù biết địa chỉ cũng **không đọc được** dữ liệu của lớp, do luật bảo mật của Firebase chặn.
+  - **Chế độ thử:** lần đầu bấm **Tạo tài khoản** (email + mật khẩu từ 6 ký tự); tài khoản chỉ lưu trong trình duyệt đó, chỉ để tránh vào nhầm trang giáo viên, **không phải bảo mật thật**.
+- Thêm giáo viên thứ hai: tạo thêm một người dùng trong Authentication → Users, rồi thêm UID của họ vào `teachers` (bước 6).
+- **Trang kiểm tra cấu hình** `…/kiemtra.html`: tự thử từng bước (Anonymous, kết nối cơ sở dữ liệu, luật bảo mật) và cho biết cần sửa gì; có ô thử đăng nhập giáo viên và hiện **User UID** để bạn thêm vào `teachers`.
+
 ## 6. Giới hạn của gói miễn phí và cách xử lý
 
 | Giới hạn | Mức | Ghi chú |
@@ -150,6 +159,7 @@ Dọn dữ liệu: trong Firebase Console → Realtime Database → Data, xóa n
 
 | Hiện tượng | Cách xử lý |
 |---|---|
+| Mở trang thấy báo lỗi / học sinh báo “Mã lớp chưa tồn tại” trong khi giáo viên đã tạo lớp | Trang đang ở **chế độ thử** (chưa nối Firebase) nên mỗi máy chỉ thấy dữ liệu của chính trình duyệt đó. Làm mục 3 và 4, rồi mở `…/kiemtra.html` để xem còn thiếu bước nào. |
 | Giáo viên đăng nhập báo "chưa có quyền giáo viên" / `permission_denied` | Chưa thêm UID vào `teachers` (bước 6), hoặc dán sai `Rules` (bước 5). |
 | Học sinh báo "Mã lớp chưa tồn tại" | Giáo viên chưa bấm **Tạo lớp mới**, hoặc học sinh gõ sai mã lớp. |
 | Trang chạy nhưng báo thiếu cấu hình Firebase | `config.js` chưa điền `apiKey`, `databaseURL`… hoặc còn `backend: 'local'`. |

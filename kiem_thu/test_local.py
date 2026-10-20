@@ -87,6 +87,20 @@ async def goto(p, url):
     await asyncio.sleep(1.5)
 
 
+def build_kiemtra_mock():
+    """Tạo bản kiemtra.html dùng SDK Firebase giả lập (lấy từ fbmock.html) để kiểm tra mã chạy đúng."""
+    import re
+    src = (ROOT / "kiemtra.html").read_text(encoding="utf-8")
+    fb = (ROOT / "kiem_thu" / "fbmock.html").read_text(encoding="utf-8")
+    i, j = fb.index("<script>window.PYLAB_CONFIG"), fb.index('<script src="../assets/js/db-firebase.js">')
+    mock = fb[i:j].replace("databaseURL: 'https://test.firebaseio.com'", "databaseURL: 'https://test-default-rtdb.firebaseio.com', authDomain: 'x', projectId: 'test', appId: 'a'")
+    page = src.replace('<script src="config.js"></script>', "")
+    page = re.sub(r"<script>if \(window\.PYLAB_CONFIG.*?</script>", lambda m: "", page, count=1, flags=re.S)
+    page = page.replace('src="assets/', 'src="../assets/').replace('href="assets/', 'href="../assets/')
+    page = page.replace('<script src="../assets/js/util.js">', mock + '<script src="../assets/js/util.js">', 1)
+    return page
+
+
 async def main():
     srv = subprocess.Popen([sys.executable, "-m", "http.server", str(HTTP_PORT), "--bind", "127.0.0.1"], cwd=str(ROOT),
                            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -107,7 +121,22 @@ async def main():
             S = await new_page(sess)
             # ------------------------------------------------ giáo viên tạo lớp
             await goto(T, BASE + "giaovien.html")
-            check("GV: hiện bảng chọn lớp (chế độ thử, không cần đăng nhập)", await T.wait_for("!document.getElementById('roomView').hidden"))
+            check("GV: bắt buộc đăng nhập (hiện màn hình đăng nhập)", await T.wait_for("!document.getElementById('loginView').hidden"))
+            check("GV: không vào được bảng điều khiển khi chưa đăng nhập", await T.js("document.getElementById('dash').hidden && document.getElementById('roomView').hidden"))
+            await T.js("document.getElementById('lEmail').value='gv@truong.vn'; document.getElementById('lPass').value='matkhau1'; document.getElementById('lGo').click(); 1")
+            check("GV: đăng nhập khi chưa có tài khoản bị từ chối", await T.wait_for("!document.getElementById('loginErr').hidden && document.getElementById('loginErr').textContent.indexOf('chưa đúng')>=0"))
+            await T.js("document.getElementById('lPass').value='12'; document.getElementById('lSignup').click(); 1")
+            check("GV: mật khẩu quá ngắn bị từ chối", await T.wait_for("document.getElementById('loginErr').textContent.indexOf('6 ký tự')>=0"))
+            await T.js("document.getElementById('lPass').value='matkhau1'; document.getElementById('lSignup').click(); 1")
+            check("GV: tạo tài khoản và vào bảng chọn lớp", await T.wait_for("!document.getElementById('roomView').hidden"))
+            await T.js("location.reload()")
+            check("GV: tải lại trang vẫn giữ phiên đăng nhập", await T.wait_for("!document.getElementById('roomView').hidden", 15))
+            await T.js("document.getElementById('btnOut').click(); 1")
+            check("GV: đăng xuất quay về màn hình đăng nhập", await T.wait_for("!document.getElementById('loginView').hidden"))
+            await T.js("document.getElementById('lEmail').value='gv@truong.vn'; document.getElementById('lPass').value='sai-mat-khau'; document.getElementById('lGo').click(); 1")
+            check("GV: sai mật khẩu bị từ chối", await T.wait_for("document.getElementById('loginErr').textContent.indexOf('chưa đúng')>=0 && document.getElementById('roomView').hidden"))
+            await T.js("document.getElementById('lPass').value='matkhau1'; document.getElementById('lGo').click(); 1")
+            check("GV: đăng nhập đúng", await T.wait_for("!document.getElementById('roomView').hidden"))
             await T.js("document.getElementById('rCode').value='9a1-tin'; document.getElementById('rTitle').value='Lớp 9A1 Tin học'; document.getElementById('rNew').click(); 1")
             check("GV: tạo lớp và vào bảng điều khiển", await T.wait_for("!document.getElementById('dash').hidden"))
             link = await T.js("document.getElementById('stuLink').dataset.url")
@@ -218,6 +247,8 @@ async def main():
             await M.shot("hs_mobile_ketqua.png")
             T2 = await new_page(sess, 390, 800, mobile=True)
             await goto(T2, BASE + "giaovien.html")
+            await T2.wait_for("!document.getElementById('loginView').hidden")
+            await T2.js("document.getElementById('lEmail').value='gv@truong.vn'; document.getElementById('lPass').value='matkhau1'; document.getElementById('lGo').click(); 1")
             check("ĐT: giáo viên thấy học sinh trên điện thoại", await T2.wait_for("document.querySelectorAll('.card').length>=1", 20))
             check("ĐT: trang giáo viên không tràn ngang", await T2.js("document.documentElement.scrollWidth <= window.innerWidth + 1"), await T2.js("document.documentElement.scrollWidth + ' > ' + window.innerWidth"))
             await T2.shot("gv_mobile.png")
@@ -230,6 +261,21 @@ async def main():
             await F.wait_for("window.__done===true", 30)
             for name, ok_, extra in (await F.js("window.__checks") or []):
                 check("FIREBASE(giả lập): " + name, ok_, extra)
+
+            # ------------------------------------------------ trang kiemtra.html (chạy với SDK Firebase giả lập)
+            (ROOT / "kiem_thu" / "_kiemtra_mock.html").write_text(build_kiemtra_mock(), encoding="utf-8")
+            K = await new_page(sess)
+            await goto(K, BASE + "kiem_thu/_kiemtra_mock.html")
+            await K.wait_for("document.querySelectorAll('#steps .step.ok').length>=5", 25)
+            nok = await K.js("document.querySelectorAll('#steps .step.ok').length")
+            nbad = await K.js("[...document.querySelectorAll('#steps .step.bad')].map(e=>e.querySelector('h3').textContent).join(' | ')")
+            check("KIỂM TRA CẤU HÌNH: 5 bước đầu đạt (SDK giả lập)", nok >= 5, (nok, nbad))
+            await K.js("document.getElementById('tEmail').value='a@b.c'; document.getElementById('tPass').value='ok'; document.getElementById('tGo').click(); 1")
+            check("KIỂM TRA CẤU HÌNH: hiện User UID khi thử đăng nhập giáo viên", await K.wait_for("document.getElementById('tOut').innerText.indexOf('TEACHER1')>=0", 10), await K.js("document.getElementById('tOut').innerText"))
+            try:
+                (ROOT / "kiem_thu" / "_kiemtra_mock.html").unlink()
+            except OSError:
+                pass
     finally:
         ch.terminate()
         srv.terminate()

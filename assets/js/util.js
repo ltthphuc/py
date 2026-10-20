@@ -101,5 +101,23 @@
   }
   function rid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
 
-  G.U = { LS, cleanPart, fileNameFor, withHeader, stamp, fmtSize, fmtTime, hhmm, readTextFile, bufToB64, b64ToBytes, download, makeZip, toast, isMobile, sanitizeRoom, rid, pad };
+  /* Mở bằng cách bấm đúp file (file://) thì Service Worker, Python... không chạy được: báo rõ cho người dùng */
+  function guardFile() {
+    if (location.protocol !== 'file:') return false;
+    const d = document.createElement('div');
+    d.style.cssText = 'position:fixed;inset:0;z-index:9999;background:#0b1f36;color:#fff;display:grid;place-items:center;padding:24px;font:16px/1.6 "Segoe UI",system-ui,sans-serif';
+    d.innerHTML = '<div style="max-width:560px"><h2 style="margin:0 0 10px">Chưa mở đúng cách</h2><p>Trang này <b>không chạy được khi bấm đúp vào file</b>. Hãy mở qua địa chỉ web, ví dụ <b>https://ltthphuc.github.io/py/</b>, hoặc chạy lệnh <code style="background:#12304f;padding:2px 8px;border-radius:6px">python -m http.server 8000</code> trong thư mục dự án rồi mở <b>http://localhost:8000/</b>.</p></div>';
+    document.body.appendChild(d); return true;
+  }
+  /* Thanh cảnh báo khi đang ở chế độ thử (đặc biệt khi đã đưa lên web) */
+  function demoBar(el, isDemo) {
+    if (!el || !isDemo) return;
+    const local = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
+    el.hidden = false;
+    if (local) { el.innerHTML = 'Đang ở <b>chế độ thử</b>: chỉ trao đổi được giữa các tab trong cùng một trình duyệt. Để chạy thật trên mạng, làm theo HUONG_DAN_TRIEN_KHAI.md.'; return; }
+    el.style.cssText = 'background:#fee2e2;color:#991b1b;border-bottom-color:#fca5a5;font-weight:600';
+    el.innerHTML = '⚠ Trang này <b>chưa nối Firebase</b> (đang ở chế độ thử): học sinh và giáo viên ở các máy khác nhau <b>chưa thấy nhau</b>. Giáo viên hãy cấu hình theo mục 3 của HUONG_DAN_TRIEN_KHAI.md, rồi mở <a href="kiemtra.html" style="color:#7f1d1d">trang kiểm tra cấu hình</a>.';
+  }
+
+  G.U = { guardFile, demoBar, LS, cleanPart, fileNameFor, withHeader, stamp, fmtSize, fmtTime, hhmm, readTextFile, bufToB64, b64ToBytes, download, makeZip, toast, isMobile, sanitizeRoom, rid, pad };
 })(window);

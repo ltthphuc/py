@@ -34,11 +34,12 @@
   <!-- ============ Đăng nhập ============ -->
   <section id="loginView" class="gate" hidden>
     <form id="loginForm" class="gatecard" autocomplete="on">
-      <div class="gt"><div class="logo big"><svg class="i" viewBox="0 0 24 24"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5M14 4l-4 16"/></svg></div><div><h2>Đăng nhập giáo viên</h2><p>Dùng tài khoản email đã tạo trong Firebase (xem hướng dẫn triển khai).</p></div></div>
+      <div class="gt"><div class="logo big"><svg class="i" viewBox="0 0 24 24"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5M14 4l-4 16"/></svg></div><div><h2>Đăng nhập giáo viên</h2><p id="loginNote">Khu vực dành cho giáo viên. Học sinh không cần đăng nhập.</p></div></div>
       <label class="field"><span>Email</span><input id="lEmail" class="inp" type="email" autocomplete="username" required></label>
-      <label class="field"><span>Mật khẩu</span><input id="lPass" class="inp" type="password" autocomplete="current-password" required></label>
+      <label class="field"><span>Mật khẩu</span><input id="lPass" class="inp" type="password" autocomplete="current-password" required minlength="6"></label>
       <div id="loginErr" class="joinerr" hidden></div>
-      <button id="lGo" type="submit" class="btn primary big">Đăng nhập</button>
+      <div class="jactions"><button id="lGo" type="submit" class="btn primary big">Đăng nhập</button><button id="lSignup" type="button" class="btn big" hidden>Tạo tài khoản</button></div>
+      <div class="loginlinks"><button type="button" id="lReset" class="linkbtn">Quên mật khẩu?</button><span>·</span><a href="kiemtra.html">Kiểm tra cấu hình</a><span>·</span><a href="index.html">Trang chủ</a></div>
     </form>
   </section>
 

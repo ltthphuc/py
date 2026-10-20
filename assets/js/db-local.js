@@ -87,9 +87,31 @@
       if (!u) { u = 'u' + Math.random().toString(36).slice(2, 12); try { sessionStorage.setItem('pylab_demo_uid', u); } catch (e) { /* bỏ qua */ } }
       this.uid = u; return u;
     }
-    async signInTeacher() { this.uid = 'teacher-demo'; return this.uid; }
-    async restoreTeacher() { return null; }          // chế độ thử không cần đăng nhập
-    async signOut() { this.uid = null; }
+    /* Chế độ thử: tài khoản giáo viên chỉ lưu trong trình duyệt này (mật khẩu băm SHA-256). Không thay thế Firebase. */
+    _accounts() { try { return JSON.parse(localStorage.getItem('pylab_demo_accounts') || '{}'); } catch (e) { return {}; } }
+    async _hash(pw, salt) {
+      const data = new TextEncoder().encode(salt + ':' + pw);
+      if (window.crypto && crypto.subtle) { const h = await crypto.subtle.digest('SHA-256', data); return Array.from(new Uint8Array(h)).map((x) => x.toString(16).padStart(2, '0')).join(''); }
+      let h = 5381; for (const b of data) h = ((h << 5) + h + b) | 0; return 'x' + h;
+    }
+    _err(code, msg) { const e = new Error(msg); e.code = code; return e; }
+    _session(email) { this.uid = 'teacher-demo-' + email.replace(/[^a-z0-9]/g, '').slice(0, 20); try { sessionStorage.setItem('pylab_demo_teacher', JSON.stringify({ email, uid: this.uid })); } catch (e) { /* bỏ qua */ } return this.uid; }
+    async signUpTeacher(email, pw) {
+      email = String(email || '').trim().toLowerCase();
+      if (!/^\S+@\S+$/.test(email)) throw this._err('auth/invalid-email', 'Email chưa đúng dạng (ví dụ ten@truong.edu.vn).');
+      if (String(pw || '').length < 6) throw this._err('auth/weak-password', 'Mật khẩu cần ít nhất 6 ký tự.');
+      const acc = this._accounts(); if (acc[email]) throw this._err('auth/email-already-in-use', 'Email này đã có tài khoản, hãy bấm Đăng nhập.');
+      const salt = Math.random().toString(36).slice(2, 10); acc[email] = { salt, hash: await this._hash(pw, salt) };
+      localStorage.setItem('pylab_demo_accounts', JSON.stringify(acc)); return this._session(email);
+    }
+    async signInTeacher(email, pw) {
+      email = String(email || '').trim().toLowerCase(); const a = this._accounts()[email];
+      if (!a || a.hash !== await this._hash(pw, a.salt)) throw this._err('auth/wrong-password', 'Email hoặc mật khẩu chưa đúng. Nếu chưa có tài khoản, bấm “Tạo tài khoản”.');
+      return this._session(email);
+    }
+    async restoreTeacher() { try { const d = JSON.parse(sessionStorage.getItem('pylab_demo_teacher') || 'null'); if (d) { this.uid = d.uid; return d.uid; } } catch (e) { /* bỏ qua */ } return null; }
+    async signOut() { this.uid = null; try { sessionStorage.removeItem('pylab_demo_teacher'); } catch (e) { /* bỏ qua */ } }
+    async resetPassword() { throw this._err('demo', 'Chế độ thử không gửi được email. Muốn đặt lại, hãy tạo tài khoản với email khác.'); }
     currentUid() { return this.uid; }
     onConnection(cb) { cb(true); return () => {}; }
     onDisconnectSet(path, value) { this.disc = this.disc.filter((d) => d.path !== path); this.disc.push({ path, value }); }

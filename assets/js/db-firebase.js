@@ -44,6 +44,7 @@
       return u && !u.isAnonymous ? u.uid : null;
     }
     async signOut() { await this.auth.signOut(); }
+    async resetPassword(email) { await this.auth.sendPasswordResetEmail(email); }
     currentUid() { return this.auth.currentUser ? this.auth.currentUser.uid : null; }
 
     onConnection(cb) {

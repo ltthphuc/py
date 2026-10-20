@@ -510,10 +510,11 @@ window.addEventListener('keydown', (e) => { if (e.key === 'Escape') $('filesPane
 
 /* ------------------------------------------------------------- khởi động */
 $('console').firstChild.dataset.ph = '1';
-if (Hub.isDemo()) $('demoBar').hidden = false;
+U.demoBar($('demoBar'), Hub.isDemo());
 const qRoom = new URLSearchParams(location.search).get('lop');
 if (qRoom) room = sanitizeRoom(qRoom);
 (async () => {
+  if (U.guardFile()) return;
   swOk = await ensureSW();
   startWorker();
   cm.refresh();

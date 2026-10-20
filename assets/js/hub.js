@@ -31,7 +31,11 @@
       const db = this.db;
       this.uid = await db.signInAnonymously();
       const m = await db.get(this.b + '/meta');
-      if (!m) throw new Error('Mã lớp “' + this.room + '” chưa tồn tại. Hãy hỏi giáo viên mã lớp chính xác.');
+      if (!m) {
+        const publicDemo = Hub.isDemo() && !/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
+        throw new Error('Mã lớp “' + this.room + '” chưa tồn tại. Hãy hỏi giáo viên mã lớp chính xác.' +
+          (publicDemo ? ' (Lưu ý: trang này đang ở CHẾ ĐỘ THỬ, chưa nối Firebase nên chỉ thấy lớp tạo trên cùng một trình duyệt. Giáo viên cần cấu hình Firebase để học sinh vào được từ máy khác.)' : ''));
+      }
       this.title = m.title || this.room;
       this.me = this.b + '/students/' + this.uid;
       try { await db.remove(this.b + '/cmd/' + this.uid); } catch (e) { /* bỏ qua */ }
